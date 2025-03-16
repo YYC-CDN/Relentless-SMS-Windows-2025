@@ -59,13 +59,15 @@ Partial Class frmMain
         Label7 = New Label()
         txtSuccessful = New TextBox()
         txtFailed = New TextBox()
+        btnChangeName = New Button()
+        TextBox1 = New TextBox()
         Label4 = New Label()
         lblProxy = New Label()
         lblCountryCode = New Label()
         lblVPN = New Label()
         VPN_Timer = New Timer(components)
         txtVerificationResults = New RichTextBox()
-        btnChangeName = New Button()
+        btnAutoDialer = New Button()
         CType(SplitContainer1, ComponentModel.ISupportInitialize).BeginInit()
         SplitContainer1.Panel1.SuspendLayout()
         SplitContainer1.SuspendLayout()
@@ -154,9 +156,9 @@ Partial Class frmMain
         btnEmailToSMS.Font = New Font("Segoe UI Variable Display", 9F, FontStyle.Bold, GraphicsUnit.Point)
         btnEmailToSMS.ForeColor = SystemColors.ControlLightLight
         btnEmailToSMS.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnEmailToSMS.Location = New Point(11, 178)
+        btnEmailToSMS.Location = New Point(11, 172)
         btnEmailToSMS.Name = "btnEmailToSMS"
-        btnEmailToSMS.Size = New Size(190, 43)
+        btnEmailToSMS.Size = New Size(190, 37)
         btnEmailToSMS.TabIndex = 8
         btnEmailToSMS.Text = "Start Email to SMS Campaign"
         ToolTip1.SetToolTip(btnEmailToSMS, "Use your internal email address to send messages to the target, the ones you added in Settings.")
@@ -264,7 +266,7 @@ Partial Class frmMain
         btnSendSMS.ImageAlign = Drawing.ContentAlignment.MiddleLeft
         btnSendSMS.Location = New Point(11, 135)
         btnSendSMS.Name = "btnSendSMS"
-        btnSendSMS.Size = New Size(190, 43)
+        btnSendSMS.Size = New Size(190, 37)
         btnSendSMS.TabIndex = 7
         btnSendSMS.Text = "TEXTBELT SMS Campaign"
         ToolTip1.SetToolTip(btnSendSMS, "TEXTBELT | Starts the SMS/Text Message Campaign against a regular cellular number" & vbCrLf & "that recieves regular text messages, or SMS messages.")
@@ -293,7 +295,7 @@ Partial Class frmMain
         pbAllFunctions.MarqueeAnimationSpeed = 200
         pbAllFunctions.Maximum = 500
         pbAllFunctions.Name = "pbAllFunctions"
-        pbAllFunctions.Size = New Size(833, 25)
+        pbAllFunctions.Size = New Size(664, 25)
         pbAllFunctions.TabIndex = 11
         ' 
         ' txtTargetNumber
@@ -321,9 +323,9 @@ Partial Class frmMain
         btnSettings.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Bold, GraphicsUnit.Point)
         btnSettings.ForeColor = SystemColors.ControlLightLight
         btnSettings.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnSettings.Location = New Point(11, 436)
+        btnSettings.Location = New Point(11, 437)
         btnSettings.Name = "btnSettings"
-        btnSettings.Size = New Size(190, 43)
+        btnSettings.Size = New Size(190, 37)
         btnSettings.TabIndex = 11
         btnSettings.Text = "Settings"
         ToolTip1.SetToolTip(btnSettings, "Program Settings")
@@ -338,9 +340,9 @@ Partial Class frmMain
         btnClose.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Bold, GraphicsUnit.Point)
         btnClose.ForeColor = SystemColors.ControlLightLight
         btnClose.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnClose.Location = New Point(11, 479)
+        btnClose.Location = New Point(11, 476)
         btnClose.Name = "btnClose"
-        btnClose.Size = New Size(190, 43)
+        btnClose.Size = New Size(190, 37)
         btnClose.TabIndex = 12
         btnClose.Text = "Close"
         ToolTip1.SetToolTip(btnClose, "Close Relentless SMS")
@@ -359,9 +361,9 @@ Partial Class frmMain
         btnVerifyNumber.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Bold, GraphicsUnit.Point)
         btnVerifyNumber.ForeColor = Color.LimeGreen
         btnVerifyNumber.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnVerifyNumber.Location = New Point(11, 307)
+        btnVerifyNumber.Location = New Point(11, 323)
         btnVerifyNumber.Name = "btnVerifyNumber"
-        btnVerifyNumber.Size = New Size(190, 43)
+        btnVerifyNumber.Size = New Size(190, 37)
         btnVerifyNumber.TabIndex = 10
         btnVerifyNumber.Text = "Number Validation"
         ToolTip1.SetToolTip(btnVerifyNumber, "Phone number validation tool")
@@ -375,9 +377,9 @@ Partial Class frmMain
         btnMailbaitSubmit.Font = New Font("Segoe UI Variable Display", 9.75F, FontStyle.Bold, GraphicsUnit.Point)
         btnMailbaitSubmit.ForeColor = SystemColors.ControlLight
         btnMailbaitSubmit.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnMailbaitSubmit.Location = New Point(11, 221)
+        btnMailbaitSubmit.Location = New Point(11, 210)
         btnMailbaitSubmit.Name = "btnMailbaitSubmit"
-        btnMailbaitSubmit.Size = New Size(190, 43)
+        btnMailbaitSubmit.Size = New Size(190, 37)
         btnMailbaitSubmit.TabIndex = 9
         btnMailbaitSubmit.Text = "MAILBAIT Campaign"
         ToolTip1.SetToolTip(btnMailbaitSubmit, "MAILBAIT  | SpamSend V1, uses mailbait.info to submit" & vbCrLf & "the senders email to the mailman mail servers. Keep it open" & vbCrLf & "as long as possible. Don't close this. EVER." & vbCrLf)
@@ -416,9 +418,9 @@ Partial Class frmMain
         btnEmailValidation.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Bold, GraphicsUnit.Point)
         btnEmailValidation.ForeColor = Color.LimeGreen
         btnEmailValidation.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnEmailValidation.Location = New Point(11, 350)
+        btnEmailValidation.Location = New Point(11, 360)
         btnEmailValidation.Name = "btnEmailValidation"
-        btnEmailValidation.Size = New Size(190, 43)
+        btnEmailValidation.Size = New Size(190, 37)
         btnEmailValidation.TabIndex = 101
         btnEmailValidation.Text = "Email Validation"
         ToolTip1.SetToolTip(btnEmailValidation, "Phone number validation tool")
@@ -460,9 +462,9 @@ Partial Class frmMain
         btnMailman.Font = New Font("Segoe UI Variable Display", 9.75F, FontStyle.Bold, GraphicsUnit.Point)
         btnMailman.ForeColor = SystemColors.ControlLight
         btnMailman.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnMailman.Location = New Point(11, 264)
+        btnMailman.Location = New Point(11, 247)
         btnMailman.Name = "btnMailman"
-        btnMailman.Size = New Size(190, 43)
+        btnMailman.Size = New Size(190, 37)
         btnMailman.TabIndex = 111
         btnMailman.Text = "MAILMAN Campaign"
         ToolTip1.SetToolTip(btnMailman, "Under Construction")
@@ -477,9 +479,9 @@ Partial Class frmMain
         btnStopAll.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Bold, GraphicsUnit.Point)
         btnStopAll.ForeColor = Color.Red
         btnStopAll.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnStopAll.Location = New Point(11, 393)
+        btnStopAll.Location = New Point(11, 397)
         btnStopAll.Name = "btnStopAll"
-        btnStopAll.Size = New Size(190, 43)
+        btnStopAll.Size = New Size(190, 37)
         btnStopAll.TabIndex = 112
         btnStopAll.Text = "Stop All"
         ToolTip1.SetToolTip(btnStopAll, "Stop ALL Attacks")
@@ -536,6 +538,36 @@ Partial Class frmMain
         txtFailed.TabIndex = 117
         txtFailed.TextAlign = HorizontalAlignment.Center
         ToolTip1.SetToolTip(txtFailed, "MAILMAN Campaign Stats")
+        ' 
+        ' btnChangeName
+        ' 
+        btnChangeName.BackColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
+        btnChangeName.BackgroundImageLayout = ImageLayout.Center
+        btnChangeName.Cursor = Cursors.Hand
+        btnChangeName.FlatAppearance.BorderColor = Color.Black
+        btnChangeName.Font = New Font("Segoe UI Variable Display Light", 11.25F, FontStyle.Regular, GraphicsUnit.Point)
+        btnChangeName.ForeColor = SystemColors.ControlLightLight
+        btnChangeName.ImageAlign = Drawing.ContentAlignment.MiddleLeft
+        btnChangeName.Location = New Point(1071, 593)
+        btnChangeName.Name = "btnChangeName"
+        btnChangeName.Size = New Size(25, 25)
+        btnChangeName.TabIndex = 121
+        ToolTip1.SetToolTip(btnChangeName, "Change Machine Name on next startup to a random value")
+        btnChangeName.UseVisualStyleBackColor = False
+        ' 
+        ' TextBox1
+        ' 
+        TextBox1.BackColor = Color.FromArgb(CByte(30), CByte(30), CByte(30))
+        TextBox1.CharacterCasing = CharacterCasing.Upper
+        TextBox1.Font = New Font("Segoe UI Variable Display", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
+        TextBox1.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
+        TextBox1.Location = New Point(902, 594)
+        TextBox1.MaxLength = 30
+        TextBox1.Name = "TextBox1"
+        TextBox1.PlaceholderText = "REFERENCE:"
+        TextBox1.Size = New Size(166, 25)
+        TextBox1.TabIndex = 122
+        ToolTip1.SetToolTip(TextBox1, "Add reference info here. It is volitile memory.")
         ' 
         ' Label4
         ' 
@@ -603,21 +635,22 @@ Partial Class frmMain
         txtVerificationResults.TabIndex = 119
         txtVerificationResults.Text = resources.GetString("txtVerificationResults.Text")
         ' 
-        ' btnChangeName
+        ' btnAutoDialer
         ' 
-        btnChangeName.BackColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
-        btnChangeName.BackgroundImageLayout = ImageLayout.Center
-        btnChangeName.Cursor = Cursors.Hand
-        btnChangeName.FlatAppearance.BorderColor = Color.Black
-        btnChangeName.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Bold, GraphicsUnit.Point)
-        btnChangeName.ForeColor = SystemColors.ControlLightLight
-        btnChangeName.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnChangeName.Location = New Point(1071, 593)
-        btnChangeName.Name = "btnChangeName"
-        btnChangeName.Size = New Size(25, 25)
-        btnChangeName.TabIndex = 121
-        ToolTip1.SetToolTip(btnChangeName, "Change Machine Name on next startup to a random value")
-        btnChangeName.UseVisualStyleBackColor = False
+        btnAutoDialer.BackColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
+        btnAutoDialer.BackgroundImageLayout = ImageLayout.Center
+        btnAutoDialer.Cursor = Cursors.Hand
+        btnAutoDialer.FlatAppearance.BorderColor = Color.Black
+        btnAutoDialer.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Bold, GraphicsUnit.Point)
+        btnAutoDialer.ForeColor = SystemColors.ControlLightLight
+        btnAutoDialer.ImageAlign = Drawing.ContentAlignment.MiddleLeft
+        btnAutoDialer.Location = New Point(11, 285)
+        btnAutoDialer.Name = "btnAutoDialer"
+        btnAutoDialer.Size = New Size(190, 37)
+        btnAutoDialer.TabIndex = 123
+        btnAutoDialer.Text = "Auto Dialer"
+        ToolTip1.SetToolTip(btnAutoDialer, "Close Relentless SMS")
+        btnAutoDialer.UseVisualStyleBackColor = False
         ' 
         ' frmMain
         ' 
@@ -625,6 +658,8 @@ Partial Class frmMain
         AutoScaleMode = AutoScaleMode.Font
         BackColor = Color.FromArgb(CByte(30), CByte(30), CByte(30))
         ClientSize = New Size(1108, 630)
+        Controls.Add(btnAutoDialer)
+        Controls.Add(TextBox1)
         Controls.Add(btnChangeName)
         Controls.Add(txtVerificationResults)
         Controls.Add(Label7)
@@ -718,4 +753,6 @@ Partial Class frmMain
     Friend WithEvents VPN_Timer As Timer
     Friend WithEvents txtVerificationResults As RichTextBox
     Friend WithEvents btnChangeName As Button
+    Friend WithEvents TextBox1 As TextBox
+    Friend WithEvents btnAutoDialer As Button
 End Class

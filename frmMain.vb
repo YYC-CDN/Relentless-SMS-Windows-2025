@@ -39,7 +39,7 @@ Public Class frmMain
     Private Sub FrmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         ' Set the form's title with the version and government use disclaimer
-        Me.Text = $"Version 030825-01 |  FOR OFFICIAL USE ONLY (FOUO) | Protected Critical Infrastructure Information (PCII): "
+        Me.Text = $"Version 031525-01 |  FOR OFFICIAL USE ONLY (FOUO) | Protected Critical Infrastructure Information (PCII): "
 
         ' Initialize startup tasks
         x.startup()

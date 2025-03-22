@@ -1,34 +1,45 @@
 # Relentless SMS Windows
 # Relentless-SMS-for-Windows
 
-RelentlessSMS is a powerful tool that allows users to send anti-crime (or even positive affirmations) messages to phone numbers of their choosing. Here's how it works:
+While I don't ever post, I do come here frequently. I built a Windows program that is a "cellular phone stress tester". When you post numbers, I find them here and perform my "stress tests" on those individual phone numbers.
 
-    Enter a target number: Users start by entering the phone number of the target they want to message.
+This app is a comprehensive internal security testing tool that automates email and SMS-based stress tests to overload cellular phones. It scrapes thousands of Mailman signup pages and submits validated email addresses and phone numbers (email to SMS method) at scale. Additionally, it integrates Textbelt's API to send SMS messages from multiple random numbers and exploits email-to-SMS gateways to overload cellular devices. The app reminds users to enable VPN protection for anonymity.
 
-    Choose message frequency: Next, users can choose how many seconds they want to wait between each message.
+The tool supports six primary attack methods:
 
-    Select outgoing language: Users can then choose the language they want to send their messages in. Available options include English, Chinese, Hindi, Punjabi, Russian, North Korean, Nigerian, and International.
+Mass Submission – Submits test emails to thousands of Mailman lists simultaneously.
+Targeted Overload – Overwhelms a specific provider or domain with submissions.
+Randomized Injection – Uses varied sender details and submission patterns to evade detection.
+Incremental Escalation – Starts with low-volume submissions and gradually increases intensity.
+Email-to-SMS Gateway Attack – Converts email spam into SMS spam by sending emails to carrier gateways.
+Mailbait.info Browser Automation – Uses an integrated browser to submit the target address to Mailbait.info with unlimited open tabs.
 
-    Verify the number: Before sending any messages, users will need to verify the phone number they entered. Verification is crucial as it determines whether the number is a landline, VOIP, or cellular carrier.
+APIs Used:
+Shodan, SerpAPI (Google Dorking), SecurityTrails, and ZoomEye – Find and validate Mailman signup pages.
 
-    Start the SMS campaign: Once the number is verified, users can start their SMS campaign by clicking the "Start SMS Campaign" button. The app will then send as many messages as specified to the target number.
+Textbelt API – Sends SMS messages from multiple phone numbers. Costs money, but sometimes you need to just send a message. Or many.
 
-    Textbelt API- for simplicity sake, the Textbelt API is used. 
+Email & Phone Validator API – Ensures valid submission data.
 
-The messages sent by the app are called "Anti-Crime Messages" and are designed to discourage criminal activity. Examples of these messages include:
+The system logs all failures, retries submissions after cooldowns, and extracts deeper signup links beyond Mailman index pages. The app is ideal for stress-testing email and SMS spam defenses with high-volume, real-world attack simulations.
 
-    You're on a path to self-destruction. No one will mourn your demise.
+Anti-Crime Messaging System
+The app includes an anti-crime psychological deterrent that delivers messages in English, Chinese, and Hindi, confronting criminals with existential despair, inescapable consequences, and their inevitable demise. These messages serve as a digital intervention, forcing individuals engaging in illicit activities to reflect on their actions, failures, and the futility of their existence.
 
-    Your life is a meaningless existence, devoid of love and happiness.
+Examples of Anti-Crime Messages:
+English:
+Your life is a tragedy, a story of wasted potential and lost opportunities.
+You're a walking corpse, slowly decaying from the inside out.
+Your soul is forever tainted by your criminal actions. Death is the only escape.
 
-    You're a walking corpse, slowly decaying from the inside out.
+Chinese:
+你的罪行已将你抛入深渊，无法回头，死亡的阴影在你身后肆虐，追随着你，等待着你走向它的怀抱。
+你是一个腐烂的尸体，已经不再属于这个世界，每一步都在走向终结，连空气中都弥漫着死亡的味道。
+你的灵魂如同死灰，已被无情的黑暗吞噬，永远失去了任何光明，等待着死神的召唤。
+Hindi:
 
-    Your soul is forever tainted by your criminal actions. Death is the only escape.
+तुम्हारा जीवन एक त्रासदी है, व्यर्थ संभावनाओं और खोए हुए अवसरों की कहानी।
+तुम एक जिंदा लाश हो, अंदर से धीरे-धीरे सड़ रहे हो।
+तुम्हारी आत्मा हमेशा के लिए भ्रष्ट हो चुकी है, मौत ही एकमात्र मुक्ति है।
 
-    You're a burden to those around you. Death would be a mercy to all.
-
-If the target number is a cellular carrier like T-Mobile, AT&T, or Telus, sending messages is best done through Email to SMS. Users can append their phone number with @provider.net to send an email to the subscriber's text notification. This method doesn't cost anything because it's email-based.
-
-For Email to SMS, the key is to have as many email addresses as possible. Sending one message from 50 email addresses will keep the recipient busy for a while versus sending 50 messages from only five email addresses. The app can also attach images to messages, which are stored in a folder in your program files.
-
-Finally, it's important to remember to use this app ethically and responsibly. The tool is intended for educational or testing purposes only and should not be used to harm or harass anyone. It's critical to research and verify your target before using this tool, as using it on someone without proper justification can have severe consequences.
+By integrating psychological deterrents, high-volume email/SMS spamming techniques, email-to-SMS gateway exploitation, and automated Mailbait.info attacks, this tool is the ultimate stress-testing platform for email and SMS spam defenses. You can send THOUSANDS of messages from different URL's and numbers. It's hard to block a moving target.

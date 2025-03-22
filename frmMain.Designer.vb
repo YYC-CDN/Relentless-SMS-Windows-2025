@@ -61,13 +61,15 @@ Partial Class frmMain
         txtFailed = New TextBox()
         btnChangeName = New Button()
         TextBox1 = New TextBox()
+        btnAutoDialer = New Button()
         Label4 = New Label()
         lblProxy = New Label()
         lblCountryCode = New Label()
         lblVPN = New Label()
         VPN_Timer = New Timer(components)
         txtVerificationResults = New RichTextBox()
-        btnAutoDialer = New Button()
+        lblTimeElapsed = New Label()
+        TmrTimeElapsed = New Timer(components)
         CType(SplitContainer1, ComponentModel.ISupportInitialize).BeginInit()
         SplitContainer1.Panel1.SuspendLayout()
         SplitContainer1.SuspendLayout()
@@ -160,7 +162,7 @@ Partial Class frmMain
         btnEmailToSMS.Name = "btnEmailToSMS"
         btnEmailToSMS.Size = New Size(190, 37)
         btnEmailToSMS.TabIndex = 8
-        btnEmailToSMS.Text = "Start Email to SMS Campaign"
+        btnEmailToSMS.Text = "Email to SMS Campaign"
         ToolTip1.SetToolTip(btnEmailToSMS, "Use your internal email address to send messages to the target, the ones you added in Settings.")
         btnEmailToSMS.UseVisualStyleBackColor = False
         ' 
@@ -291,11 +293,11 @@ Partial Class frmMain
         ' 
         pbAllFunctions.BackColor = Color.FromArgb(CByte(34), CByte(39), CByte(42))
         pbAllFunctions.ForeColor = Color.FromArgb(CByte(34), CByte(39), CByte(42))
-        pbAllFunctions.Location = New Point(232, 593)
+        pbAllFunctions.Location = New Point(307, 591)
         pbAllFunctions.MarqueeAnimationSpeed = 200
         pbAllFunctions.Maximum = 500
         pbAllFunctions.Name = "pbAllFunctions"
-        pbAllFunctions.Size = New Size(664, 25)
+        pbAllFunctions.Size = New Size(589, 25)
         pbAllFunctions.TabIndex = 11
         ' 
         ' txtTargetNumber
@@ -479,7 +481,7 @@ Partial Class frmMain
         btnStopAll.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Bold, GraphicsUnit.Point)
         btnStopAll.ForeColor = Color.Red
         btnStopAll.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnStopAll.Location = New Point(11, 397)
+        btnStopAll.Location = New Point(11, 399)
         btnStopAll.Name = "btnStopAll"
         btnStopAll.Size = New Size(190, 37)
         btnStopAll.TabIndex = 112
@@ -548,7 +550,7 @@ Partial Class frmMain
         btnChangeName.Font = New Font("Segoe UI Variable Display Light", 11.25F, FontStyle.Regular, GraphicsUnit.Point)
         btnChangeName.ForeColor = SystemColors.ControlLightLight
         btnChangeName.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnChangeName.Location = New Point(1071, 593)
+        btnChangeName.Location = New Point(1071, 591)
         btnChangeName.Name = "btnChangeName"
         btnChangeName.Size = New Size(25, 25)
         btnChangeName.TabIndex = 121
@@ -561,13 +563,30 @@ Partial Class frmMain
         TextBox1.CharacterCasing = CharacterCasing.Upper
         TextBox1.Font = New Font("Segoe UI Variable Display", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
         TextBox1.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        TextBox1.Location = New Point(902, 594)
+        TextBox1.Location = New Point(902, 591)
         TextBox1.MaxLength = 30
         TextBox1.Name = "TextBox1"
         TextBox1.PlaceholderText = "REFERENCE:"
         TextBox1.Size = New Size(166, 25)
         TextBox1.TabIndex = 122
         ToolTip1.SetToolTip(TextBox1, "Add reference info here. It is volitile memory.")
+        ' 
+        ' btnAutoDialer
+        ' 
+        btnAutoDialer.BackColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
+        btnAutoDialer.BackgroundImageLayout = ImageLayout.Center
+        btnAutoDialer.Cursor = Cursors.Hand
+        btnAutoDialer.FlatAppearance.BorderColor = Color.Black
+        btnAutoDialer.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Bold, GraphicsUnit.Point)
+        btnAutoDialer.ForeColor = SystemColors.ControlLightLight
+        btnAutoDialer.ImageAlign = Drawing.ContentAlignment.MiddleLeft
+        btnAutoDialer.Location = New Point(11, 285)
+        btnAutoDialer.Name = "btnAutoDialer"
+        btnAutoDialer.Size = New Size(190, 37)
+        btnAutoDialer.TabIndex = 123
+        btnAutoDialer.Text = "Auto Dialer"
+        ToolTip1.SetToolTip(btnAutoDialer, "This is for the auto-dialer function,not yet implimented as of March 2025")
+        btnAutoDialer.UseVisualStyleBackColor = False
         ' 
         ' Label4
         ' 
@@ -635,22 +654,22 @@ Partial Class frmMain
         txtVerificationResults.TabIndex = 119
         txtVerificationResults.Text = resources.GetString("txtVerificationResults.Text")
         ' 
-        ' btnAutoDialer
+        ' lblTimeElapsed
         ' 
-        btnAutoDialer.BackColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
-        btnAutoDialer.BackgroundImageLayout = ImageLayout.Center
-        btnAutoDialer.Cursor = Cursors.Hand
-        btnAutoDialer.FlatAppearance.BorderColor = Color.Black
-        btnAutoDialer.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Bold, GraphicsUnit.Point)
-        btnAutoDialer.ForeColor = SystemColors.ControlLightLight
-        btnAutoDialer.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnAutoDialer.Location = New Point(11, 285)
-        btnAutoDialer.Name = "btnAutoDialer"
-        btnAutoDialer.Size = New Size(190, 37)
-        btnAutoDialer.TabIndex = 123
-        btnAutoDialer.Text = "Auto Dialer"
-        ToolTip1.SetToolTip(btnAutoDialer, "Close Relentless SMS")
-        btnAutoDialer.UseVisualStyleBackColor = False
+        lblTimeElapsed.AutoSize = True
+        lblTimeElapsed.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
+        lblTimeElapsed.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
+        lblTimeElapsed.Location = New Point(221, 593)
+        lblTimeElapsed.Name = "lblTimeElapsed"
+        lblTimeElapsed.Size = New Size(79, 21)
+        lblTimeElapsed.TabIndex = 124
+        lblTimeElapsed.Text = "000:00:00"
+        lblTimeElapsed.TextAlign = Drawing.ContentAlignment.MiddleCenter
+        ' 
+        ' TmrTimeElapsed
+        ' 
+        TmrTimeElapsed.Enabled = True
+        TmrTimeElapsed.Interval = 1000
         ' 
         ' frmMain
         ' 
@@ -658,6 +677,7 @@ Partial Class frmMain
         AutoScaleMode = AutoScaleMode.Font
         BackColor = Color.FromArgb(CByte(30), CByte(30), CByte(30))
         ClientSize = New Size(1108, 630)
+        Controls.Add(lblTimeElapsed)
         Controls.Add(btnAutoDialer)
         Controls.Add(TextBox1)
         Controls.Add(btnChangeName)
@@ -755,4 +775,6 @@ Partial Class frmMain
     Friend WithEvents btnChangeName As Button
     Friend WithEvents TextBox1 As TextBox
     Friend WithEvents btnAutoDialer As Button
+    Friend WithEvents lblTimeElapsed As Label
+    Friend WithEvents TmrTimeElapsed As Timer
 End Class

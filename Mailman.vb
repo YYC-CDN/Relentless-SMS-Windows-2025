@@ -1,84 +1,97 @@
-﻿Imports System.IO
-Imports System.Net.Http
-Imports System.Threading.Tasks
+﻿Imports System.Net.Http
+Imports System.Threading
+Imports HtmlAgilityPack
 
 Public Class Mailman
-    Private httpClient As New HttpClient()
 
-    ' Submit emails to all signup URLs
-    Public Async Function SubmitEmails(targetEmail As String, updateStatus As Action(Of String, Boolean?)) As Task
-        Dim successfulUrls As New List(Of String)()
-        Dim failedUrls As New List(Of String)()
-        Dim allUrls As List(Of String) = File.ReadAllLines(x.SignupUrlsPath).ToList()
 
-        For Each signupUrl In allUrls
-            signupUrl = signupUrl.Trim()
-            If String.IsNullOrWhiteSpace(signupUrl) Then Continue For
 
-            updateStatus($"Processing: {signupUrl}", Nothing)
-            LogStatus($"Processing: {signupUrl}")
-
-            ' Ensure we are submitting to the correct subscription page
-            Dim subscriptionUrl As String = signupUrl.Replace("listinfo", "subscribe")
-            Dim success As Boolean = Await SubmitToSignupPage(subscriptionUrl, targetEmail)
-
-            If success Then
-                successfulUrls.Add(signupUrl)
-                updateStatus($"✅ Success: {targetEmail} submitted to {subscriptionUrl}", True)
-                LogStatus($"✅ Success: {targetEmail} submitted to {subscriptionUrl}")
-            Else
-                failedUrls.Add(signupUrl)
-                updateStatus($"❌ Failed: {targetEmail} to {subscriptionUrl}", False)
-                LogStatus($"❌ Failed: {targetEmail} to {subscriptionUrl}")
+    Public Async Function SubmitEmails(targetEmail As String, updateUI As Action(Of String, Boolean?), cancelToken As CancellationToken) As Task
+            Dim signupUrlsPath As String = "C:\RelentlessSMS\Mailman\signup_urls.txt"
+            If Not IO.File.Exists(signupUrlsPath) Then
+                updateUI("❌ signup_urls.txt not found.", False)
+                Return
             End If
-        Next
 
-        ' Overwrite the master list with only successful URLs
-        File.WriteAllLines(x.SignupUrlsPath, successfulUrls)
+            Dim urls As String() = IO.File.ReadAllLines(signupUrlsPath)
+            Dim httpClient As New HttpClient()
 
-        ' Optional: Log removed failed URLs for debugging
-        File.WriteAllLines(Path.Combine(x.MailmanPath, "failed_urls.txt"), failedUrls)
+            For Each url As String In urls
+                ' 🔴 Immediate exit if user requested stop (no logs, no delay)
+                If cancelToken.IsCancellationRequested Then Exit Function
 
-        updateStatus($"✅ {successfulUrls.Count} URLs kept. ❌ {failedUrls.Count} URLs removed.", Nothing)
-        LogStatus($"✅ {successfulUrls.Count} URLs kept. ❌ {failedUrls.Count} URLs removed.")
-    End Function
+                Try
+                    Dim response As HttpResponseMessage = Await httpClient.GetAsync(url)
+                    Dim html As String = Await response.Content.ReadAsStringAsync()
 
-    ' Submit to the actual signup page
-    Private Async Function SubmitToSignupPage(subscriptionUrl As String, targetEmail As String) As Task(Of Boolean)
-        Try
-            Dim postData As New FormUrlEncodedContent(New Dictionary(Of String, String) From {
-                {"email", targetEmail},
-                {"email-button", "Subscribe"}
-            })
+                    ' Stop again in case delay occurred
+                    If cancelToken.IsCancellationRequested Then Exit Function
 
-            Dim response As HttpResponseMessage = Await httpClient.PostAsync(subscriptionUrl, postData)
-            Dim responseContent As String = Await response.Content.ReadAsStringAsync()
+                    Dim htmlDoc As New HtmlDocument()
+                    htmlDoc.LoadHtml(html)
 
-            ' Log the full response for debugging
-            LogResponse(subscriptionUrl, responseContent)
+                    Dim form = htmlDoc.DocumentNode.SelectSingleNode("//form[contains(@action, 'subscribe') or contains(@action, 'mailman')]")
+                    If form Is Nothing Then
+                        If Not cancelToken.IsCancellationRequested Then
+                            updateUI($"⚠ No subscription form found on {url}", False)
+                        End If
+                        Continue For
+                    End If
 
-            Return response.IsSuccessStatusCode
-        Catch ex As Exception
-            LogStatus($"❌ Error submitting to {subscriptionUrl}: {ex.Message}")
-            Return False
-        End Try
-    End Function
+                    Dim action As String = form.GetAttributeValue("action", "")
+                    If String.IsNullOrEmpty(action) Then
+                        If Not cancelToken.IsCancellationRequested Then
+                            updateUI($"⚠ Form has no action URL at {url}", False)
+                        End If
+                        Continue For
+                    End If
 
-    ' Shared method to log status messages
-    Public Shared Sub LogStatus(message As String)
-        Try
-            File.AppendAllText(Path.Combine(x.LogsPath, "Logs.txt"), $"{DateTime.Now}: {message}{Environment.NewLine}")
-        Catch ex As Exception
-            ' Ignore logging errors to prevent crashes
-        End Try
-    End Sub
+                    Dim formUrl As String = If(action.StartsWith("http"), action, New Uri(New Uri(url), action).ToString())
+                    Dim tokenInput = form.SelectSingleNode(".//input[@name='sub_form_token']")
+                    Dim hiddenToken As String = If(tokenInput IsNot Nothing, tokenInput.GetAttributeValue("value", ""), "")
 
-    ' Shared method to log responses from servers
-    Public Shared Sub LogResponse(url As String, response As String)
-        Try
-            File.AppendAllText(Path.Combine(x.LogsPath, "ResponseLogs.txt"), $"{DateTime.Now}: Response from {url}{Environment.NewLine}{response}{Environment.NewLine}---{Environment.NewLine}")
-        Catch ex As Exception
-            ' Ignore logging errors to prevent crashes
-        End Try
-    End Sub
-End Class
+                    Dim postData As New Dictionary(Of String, String) From {
+                        {"email", targetEmail},
+                        {"email-button", "Subscribe"}
+                    }
+
+                    If Not String.IsNullOrEmpty(hiddenToken) Then
+                        postData.Add("sub_form_token", hiddenToken)
+                    End If
+
+                    Dim content As New FormUrlEncodedContent(postData)
+                    Dim postResponse As HttpResponseMessage = Await httpClient.PostAsync(formUrl, content)
+                    Dim postText As String = Await postResponse.Content.ReadAsStringAsync()
+
+                    If cancelToken.IsCancellationRequested Then Exit Function
+
+                    Dim isSuccess As Boolean = postText.ToLower().Contains("confirmation") OrElse
+                                                   postText.ToLower().Contains("already subscribed") OrElse
+                                                   postText.ToLower().Contains("success")
+
+                    If Not cancelToken.IsCancellationRequested Then
+                        updateUI($"📤 Submitted to {formUrl}", isSuccess)
+                    End If
+
+                Catch ex As Exception
+                    If Not cancelToken.IsCancellationRequested Then
+                        updateUI($"❌ Error with {url}: {ex.Message}", False)
+                    End If
+                End Try
+
+                ' Delay only if not canceled
+                For i As Integer = 1 To 10
+                    If cancelToken.IsCancellationRequested Then Exit Function
+                    Await Task.Delay(50) ' 10 x 50ms = 500ms throttle total
+                Next
+            Next
+
+            ' Final status message only if still active
+            If Not cancelToken.IsCancellationRequested Then
+                updateUI("✅ Submission process completed.", Nothing)
+            End If
+        End Function
+
+    End Class
+
+

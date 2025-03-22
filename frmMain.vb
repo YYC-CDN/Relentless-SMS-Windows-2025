@@ -28,9 +28,13 @@ Public Class frmMain
     Private random As New Random()
     Private provider_options As Dictionary(Of String, List(Of String))
     Private fileSaveDate As DateTime
-    Private cancelTokenSource As CancellationTokenSource
     Private httpClient As New HttpClient()
     Private targetHistory As New AutoCompleteStringCollection()
+    Private elapsedSeconds As Integer = 0
+
+
+    Private cancelTokenSource As New CancellationTokenSource()
+    Private cancelToken As CancellationToken = cancelTokenSource.Token
 
 
     ' =======================================================================================
@@ -38,8 +42,9 @@ Public Class frmMain
     ' =======================================================================================
     Private Sub FrmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+
         ' Set the form's title with the version and government use disclaimer
-        Me.Text = $"Version 031525-01 |  FOR OFFICIAL USE ONLY (FOUO) | Protected Critical Infrastructure Information (PCII): "
+        Me.Text = $"Version 032225-01 |  FOR OFFICIAL USE ONLY (FOUO) | Protected Critical Infrastructure Information (PCII): "
 
         ' Initialize startup tasks
         x.startup()
@@ -146,13 +151,29 @@ Public Class frmMain
         End Try
 
         ' Initialize VPN Update Timer to trigger every 10 seconds
-        VPN_Timer.Interval = 10000 ' Set interval (10 seconds) for regular VPN status updates
+        VPN_Timer.Interval = 500 ' Set interval (XX seconds) for regular VPN status updates
         VPN_Timer.Start() ' Start the timer
 
         ' Perform initial fetch for proxy details
         FetchProxyDetails()
 
+        ' Reset the timer 
+        x.ResetElapsedTimer()
+
+        ' Keep STOP button enabled
+        btnStopAll.Enabled = True
+
+        With btnStopAll
+            .BackColor = Color.Firebrick
+            .ForeColor = Color.White
+            .FlatStyle = FlatStyle.Flat
+            .Font = New Font(.Font.FontFamily, .Font.Size + 1, FontStyle.Bold)
+        End With
+
+
+
     End Sub
+
 
     ' =======================================================================================
     ' Load Provider Options
@@ -518,7 +539,10 @@ Public Class frmMain
                 ' Ask the user to verify the target number and number of messages.
                 Dim verifyTargetNumber As DialogResult = MessageBox.Show("Is " & txtTargetNumber.Text & " the correct target number with " & txtNumberofMessages.Text & " messages?", "Confirm Target Number and Number of Messages", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation)
                 If verifyTargetNumber = DialogResult.Yes Then
-                    ' Send the email message as SMS.
+                    ' Start timer 
+                    x.StartElapsedTimer(lblTimeElapsed)
+
+                    ' STHEN end the email message as SMS.
                     Dim selected_provider As String = dbSelectCellProvider.SelectedItem.ToString()
                     SendEmailToSMS.sendemailtosms()
                     'Task.Run(Sub() SendEmailToSMS())
@@ -928,67 +952,78 @@ Public Class frmMain
     End Function
 
     ' =======================================================================================
-    ' Control Process Execution and Stopping
-    ' =======================================================================================
-    Private isProcessRunning As Boolean = False
-
-    ' =======================================================================================
     ' Stop All Ongoing Processes
-    ' This function stops all running submission processes, resets UI elements, and cancels 
-    ' any pending asynchronous tasks.
+    ' Stops everything safely: cancels async tasks, resets UI, and halts timers.
     ' =======================================================================================
     Private Sub btnStopAll_Click(sender As Object, e As EventArgs) Handles btnStopAll.Click
-        ' Run this process asynchronously on a separate thread
-        Task.Run(Sub()
-                     ' Check if a process is running before attempting to stop
-                     If isProcessRunning Then
-                         ' Reset the progress bar and stop any animations
-                         pbAllFunctions.Style = ProgressBarStyle.Blocks
-                         pbAllFunctions.Value = 0
-                         pbAllFunctions.MarqueeAnimationSpeed = 0
+        Try
+            ' Cancel any async operations using the cancellation token
+            If cancelTokenSource IsNot Nothing Then
+                cancelTokenSource.Cancel()
+            End If
 
-                         ' Stop all processes
-                         isProcessRunning = False ' Mark process as stopped
-                         KillAllProcesses()
+            ' Reset progress bar
+            pbAllFunctions.Style = ProgressBarStyle.Blocks
+            pbAllFunctions.Value = 0
+            pbAllFunctions.MarqueeAnimationSpeed = 0
 
-                         ' Clear the UI display
-                         pbAllFunctions.Style = ProgressBarStyle.Blocks
-                         pbAllFunctions.Value = 0
-                         txtOutgoingMessages.Text = "" ' Reset message log
-                     End If
-                 End Sub)
+            ' Stop and reset elapsed timer
+            x.StopElapsedTimer()
+            x.ResetElapsedTimer()
 
-        ' If the cancellation token exists, signal the cancellation
-        If cancelTokenSource IsNot Nothing Then
-            cancelTokenSource.Cancel()
-            txtOutgoingMessages.AppendText("Stopping process... Please wait." & Environment.NewLine)
-        End If
+            ' Clear messages
+            txtOutgoingMessages.Clear()
+
+            ' Re-enable/disable appropriate buttons
+            btnMailman.Enabled = True
+            'btnStopAll.Enabled = False
+
+            ' Optional: reset counters if you have them
+            txtSuccessful.Text = "0"
+            txtFailed.Text = "0"
+
+            ' Let user know
+            txtOutgoingMessages.AppendText("⛔ All operations stopped by user." & Environment.NewLine)
+
+            ' Forcefully kill extra processes (rarely needed but kept as a failsafe)
+            KillAllProcesses()
+
+        Catch ex As Exception
+            MessageBox.Show("Error while stopping processes: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+
+
     End Sub
 
     ' =======================================================================================
-    ' Kill All Running Processes
-    ' This function forcefully terminates any processes related to the application.
+    ' Kill All Running Processes (Failsafe - kills duplicates of this app)
     ' =======================================================================================
     Private Sub KillAllProcesses()
-        ' Get the current running process instance
-        Dim currentProcess As Process = Process.GetCurrentProcess()
+        Try
+            Dim currentProcess As Process = Process.GetCurrentProcess()
+            Dim processes As Process() = Process.GetProcessesByName(currentProcess.ProcessName)
 
-        ' Retrieve all processes with the same name as the current process
-        Dim processes As Process() = Process.GetProcessesByName(currentProcess.ProcessName)
-
-        ' Iterate through each process and terminate if it's not the current instance
-        For Each process As Process In processes
-            If process.Id <> currentProcess.Id Then
-                process.Kill()
-            End If
-        Next
+            For Each process As Process In processes
+                If process.Id <> currentProcess.Id Then
+                    process.Kill()
+                End If
+            Next
+        Catch ex As Exception
+            ' Suppress kill errors
+        End Try
     End Sub
+
 
 
     ' =======================================================================================
     ' Handles the button click event to start email submission
     ' =======================================================================================
     Private Async Sub btnMailman_Click(sender As Object, e As EventArgs) Handles btnMailman.Click
+
+        ' Start the timer
+        x.StartElapsedTimer(lblTimeElapsed)
+
+
 
         ' =======================================================================================
         ' Display Warning Prompt Before Execution (With VPN & Region Status)
@@ -1017,8 +1052,10 @@ Public Class frmMain
         ' =======================================================================================
         ' Disable UI Elements to Prevent Multiple Submissions
         ' =======================================================================================
-        btnMailman.Enabled = False
-        btnStopAll.Enabled = True
+        ' btnMailman.Enabled = False
+        '  btnStopAll.Enabled = True
+        ' Maybe I WANT multiple submissions
+
 
         ' =======================================================================================
         ' Validate Target Email Input
@@ -1049,7 +1086,10 @@ Public Class frmMain
         Dim mailman As New Mailman()
         Try
             ' Execute email submission asynchronously
-            Await mailman.SubmitEmails(targetEmail, AddressOf UpdateUIStatus)
+            cancelTokenSource = New CancellationTokenSource()
+            cancelToken = cancelTokenSource.Token
+            Await mailman.SubmitEmails(targetEmail, AddressOf UpdateUIStatus, cancelToken)
+
 
             ' Display and log completion message
             txtOutgoingMessages.AppendText("✅ Submission process completed." & Environment.NewLine)
@@ -1069,8 +1109,9 @@ Public Class frmMain
             pbAllFunctions.Style = ProgressBarStyle.Blocks
             pbAllFunctions.Value = 0
             btnMailman.Enabled = True
-            btnStopAll.Enabled = False
+            'btnStopAll.Enabled = False
         End Try
+
     End Sub
 
     ' =======================================================================================
@@ -1161,6 +1202,26 @@ Public Class frmMain
     Private Sub btnChangeName_Click(sender As Object, e As EventArgs) Handles btnChangeName.Click
         x.ScheduleDeviceNameChange()
     End Sub
+
+    Private Sub btnAutoDialer_Click(sender As Object, e As EventArgs) Handles btnAutoDialer.Click
+        Dim targetNumber As String = txtTargetNumber.Text.Trim()
+        Dim wavFilePath As String = "C:\RelentlessSMS\Audio\message.wav" ' Change this path if needed
+        Dim repeatCount As Integer = 3 ' Set as per your needs
+
+        If String.IsNullOrWhiteSpace(targetNumber) Then
+            MessageBox.Show("Enter a valid phone number.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Exit Sub
+        End If
+
+        Dim confirm As DialogResult = MessageBox.Show($"Dial {targetNumber} and play audio {repeatCount} times?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+        If confirm = DialogResult.Yes Then
+            x_AutoDialer.StartAutoDialer(targetNumber, wavFilePath, repeatCount)
+        End If
+    End Sub
+
+
+
+
 End Class
 
 ' =======================================------

@@ -31,10 +31,9 @@ Public Class frmMain
     Private httpClient As New HttpClient()
     Private targetHistory As New AutoCompleteStringCollection()
     Private elapsedSeconds As Integer = 0
-
-
     Private cancelTokenSource As New CancellationTokenSource()
     Private cancelToken As CancellationToken = cancelTokenSource.Token
+    Private mailmanTask As Task = Nothing
 
 
     ' =======================================================================================
@@ -44,7 +43,7 @@ Public Class frmMain
 
 
         ' Set the form's title with the version and government use disclaimer
-        Me.Text = $"Version 032225-01 |  FOR OFFICIAL USE ONLY (FOUO) | Protected Critical Infrastructure Information (PCII): "
+        Me.Text = $"Version 032325-01 |  FOR OFFICIAL USE ONLY (FOUO) | Protected Critical Infrastructure Information (PCII): "
 
         ' Initialize startup tasks
         x.startup()
@@ -157,9 +156,6 @@ Public Class frmMain
         ' Perform initial fetch for proxy details
         FetchProxyDetails()
 
-        ' Reset the timer 
-        x.ResetElapsedTimer()
-
         ' Keep STOP button enabled
         btnStopAll.Enabled = True
 
@@ -170,7 +166,8 @@ Public Class frmMain
             .Font = New Font(.Font.FontFamily, .Font.Size + 1, FontStyle.Bold)
         End With
 
-
+        ' Special code to clean up the target history file if it's dirty
+        x.CleanTargetHistory()
 
     End Sub
 
@@ -341,18 +338,19 @@ Public Class frmMain
     ' Save Target Entry to History
     ' =======================================================================================
     Private Sub SaveToTargetHistory(target As String)
-        ' Ensure target is valid before saving
-        If Not String.IsNullOrWhiteSpace(target) AndAlso Not AutoCompleteCollection.Contains(target) Then
-            ' Add the target to AutoComplete collection
+        target = target.Trim()
+
+        ' Allow ONLY valid emails or 10+ digit numbers
+        Dim isValidEmail = IsValidEmailAddress(target)
+        Dim isValidNumber = target.All(AddressOf Char.IsDigit) AndAlso target.Length >= 10
+
+        If (isValidEmail OrElse isValidNumber) AndAlso Not AutoCompleteCollection.Contains(target) Then
             AutoCompleteCollection.Add(target)
-
-            ' Append the new target to the history file
             File.AppendAllText(x.TargetHistoryPath, target & Environment.NewLine)
-
-            ' Reapply AutoComplete settings
             txtTargetNumber.AutoCompleteCustomSource = AutoCompleteCollection
         End If
     End Sub
+
 
 
 
@@ -402,6 +400,8 @@ Public Class frmMain
         btnEmailToSMS.Enabled = hasAtSymbol
         btnMailbaitSubmit.Enabled = hasAtSymbol
         btnMailman.Enabled = hasAtSymbol
+        btnAutoDialer.Enabled = Not hasAtSymbol AndAlso hasTenDigits
+
 
         ' Save valid input to history
         If (hasAtSymbol OrElse hasTenDigits) AndAlso Not String.IsNullOrWhiteSpace(targetNumber) Then
@@ -409,13 +409,17 @@ Public Class frmMain
         End If
 
 
-        ' List of characters to remove ( (, ), and space )
-        Dim charsToRemove As Char() = {"(", ")", " "}
+        If Not targetNumber.Contains("@") AndAlso Not targetNumber.Any(Function(c) Char.IsLetter(c)) Then
+            ' Only clean non-email numeric-looking input
+            Dim digitsOnly As String = New String(targetNumber.Where(Function(c) Char.IsDigit(c)).ToArray())
+            If txtTargetNumber.Text <> digitsOnly Then
+                txtTargetNumber.Text = digitsOnly
+                txtTargetNumber.SelectionStart = txtTargetNumber.Text.Length
+            End If
+        End If
 
-        ' Remove unwanted characters ( (, ), and spaces)
-        For Each c As Char In charsToRemove
-            targetNumber = targetNumber.Replace(c, "")
-        Next
+
+
 
 
         ' Enable or disable buttons based on the presence of the "@" symbol
@@ -899,101 +903,50 @@ Public Class frmMain
             ' MessageBox.Show("Error: " + ex.Message)
         End Try
     End Sub
-    ' =======================================================================================
-    ' Submit an Email to Mailing List Servers
-    ' This function reads nodes and providers from text files, constructs valid submission URLs, 
-    ' and attempts to submit the target email to multiple Mailman servers.
-    ' =======================================================================================
-    Private Async Function SubmitEmail(targetEmail As String, submissionUrl As String) As Task
-        ' Counters for success and failure tracking
-        Dim successfulCount As Integer = 0
-        Dim failedCount As Integer = 0
 
-        ' Open the nodes file and iterate through each node
-        Using nodesReader As New StreamReader("C:\RelentlessSMS\Mailman\nodes.txt")
-            While Not nodesReader.EndOfStream
-                Dim node = nodesReader.ReadLine()?.Trim()
-                If String.IsNullOrWhiteSpace(node) Then Continue While ' Skip empty lines
-
-                ' Open the providers file and iterate through each provider
-                Using providersReader As New StreamReader("C:\RelentlessSMS\Mailman\providers.txt")
-                    While Not providersReader.EndOfStream
-                        Dim provider = providersReader.ReadLine()?.Trim()
-                        If String.IsNullOrWhiteSpace(provider) Then Continue While ' Skip empty lines
-
-                        Try
-                            ' Ensure both node and provider are not empty before proceeding
-                            If Not String.IsNullOrEmpty(node) AndAlso Not String.IsNullOrEmpty(provider) Then
-                                ' Construct the submission URL
-                                submissionUrl = $"{node}{provider}"
-
-                                ' Attempt to submit the email to the constructed URL
-                                Await SubmitEmail(targetEmail, submissionUrl)
-
-                                ' Update success count and UI
-                                successfulCount += 1
-                                txtSuccessful.Text = successfulCount.ToString()
-                            End If
-                        Catch ex As Exception
-                            ' Update failure count and UI in case of an exception
-                            failedCount += 1
-                            txtFailed.Text = failedCount.ToString()
-                        End Try
-
-                        ' =======================================================================================
-                        ' Throttle requests to avoid overloading servers
-                        ' Future improvement: Convert this delay into a configurable setting via a textbox
-                        ' =======================================================================================
-                        Await Task.Delay(500) ' Delay of 500ms between requests
-                    End While
-                End Using
-            End While
-        End Using
-    End Function
 
     ' =======================================================================================
     ' Stop All Ongoing Processes
     ' Stops everything safely: cancels async tasks, resets UI, and halts timers.
     ' =======================================================================================
-    Private Sub btnStopAll_Click(sender As Object, e As EventArgs) Handles btnStopAll.Click
+    Private Async Sub btnStopAll_Click(sender As Object, e As EventArgs) Handles btnStopAll.Click
         Try
-            ' Cancel any async operations using the cancellation token
             If cancelTokenSource IsNot Nothing Then
                 cancelTokenSource.Cancel()
             End If
 
-            ' Reset progress bar
+            ' Wait for mailman task to exit if running
+            If mailmanTask IsNot Nothing Then
+                Try
+                    Await mailmanTask
+                Catch ex As OperationCanceledException
+                    ' Expected when canceled
+                Catch ex As Exception
+                    ' Log if needed
+                End Try
+            End If
+
+            ' Now it's safe to update the UI
             pbAllFunctions.Style = ProgressBarStyle.Blocks
             pbAllFunctions.Value = 0
             pbAllFunctions.MarqueeAnimationSpeed = 0
-
-            ' Stop and reset elapsed timer
             x.StopElapsedTimer()
-            x.ResetElapsedTimer()
 
-            ' Clear messages
             txtOutgoingMessages.Clear()
-
-            ' Re-enable/disable appropriate buttons
-            btnMailman.Enabled = True
-            'btnStopAll.Enabled = False
-
-            ' Optional: reset counters if you have them
-            txtSuccessful.Text = "0"
-            txtFailed.Text = "0"
-
-            ' Let user know
             txtOutgoingMessages.AppendText("⛔ All operations stopped by user." & Environment.NewLine)
 
-            ' Forcefully kill extra processes (rarely needed but kept as a failsafe)
+            btnMailman.Enabled = True
+            'txtSuccessful.Text = "0"
+            'txtFailed.Text = "0"
+
             KillAllProcesses()
 
         Catch ex As Exception
             MessageBox.Show("Error while stopping processes: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
-
-
     End Sub
+
+
 
     ' =======================================================================================
     ' Kill All Running Processes (Failsafe - kills duplicates of this app)
@@ -1019,10 +972,6 @@ Public Class frmMain
     ' Handles the button click event to start email submission
     ' =======================================================================================
     Private Async Sub btnMailman_Click(sender As Object, e As EventArgs) Handles btnMailman.Click
-
-        ' Start the timer
-        x.StartElapsedTimer(lblTimeElapsed)
-
 
 
         ' =======================================================================================
@@ -1080,6 +1029,9 @@ Public Class frmMain
         ' Log the start of the process
         LogStatus("🔄 Starting email submissions... ")
 
+        ' Start the timer
+        x.StartElapsedTimer(lblTimeElapsed)
+
         ' =======================================================================================
         ' Initialize Mailman Class and Start Submission Process
         ' =======================================================================================
@@ -1088,7 +1040,9 @@ Public Class frmMain
             ' Execute email submission asynchronously
             cancelTokenSource = New CancellationTokenSource()
             cancelToken = cancelTokenSource.Token
-            Await mailman.SubmitEmails(targetEmail, AddressOf UpdateUIStatus, cancelToken)
+            mailmanTask = mailman.SubmitEmails(targetEmail, AddressOf UpdateUIStatus, cancelToken)
+            Await mailmanTask
+
 
 
             ' Display and log completion message

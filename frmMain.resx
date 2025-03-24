@@ -318,6 +318,12 @@ LOT of spam to the target phone OR email address. Leave
 RSMS open for hours to keep it alive, and maximize the 
 output to the target. This is a very effective tool. </value>
   </data>
+  <data name="tbThrottle.ToolTip" xml:space="preserve">
+    <value>Controls the delay between each signup submission.
+⬅ Left = faster (30s per submission)
+➡ Right = slower (up to 10 minutes between submissions)
+Includes slight random delay (5 second wiggle) to simulate real users and avoid spam filters.</value>
+  </data>
   <metadata name="VPN_Timer.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>422, 13</value>
   </metadata>

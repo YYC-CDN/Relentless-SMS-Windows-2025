@@ -80,8 +80,26 @@ Public Class Mailman
                                                     updateUI($"📤 Submitted to {formUrl}", True)
 
                                                     ' Respect throttle setting
-                                                    Dim delay As Integer = frmMain.tbThrottle.Value
-                                                    If delay > 0 Then Await Task.Delay(delay, cancelToken)
+                                                    ' Convert throttle value (1–20) into seconds
+                                                    ' Base throttle delay from the slider
+                                                    Dim baseDelaySeconds As Integer = frmMain.tbThrottle.Value * 30
+
+                                                    ' Add randomized jitter: -5 to +5 seconds
+                                                    Dim jitterSeconds As Integer = New Random().Next(-5, 6) ' includes -5 through +5
+
+                                                    ' Final delay, minimum 1 second to avoid 0 or negative
+                                                    Dim finalDelaySeconds As Integer = Math.Max(1, baseDelaySeconds + jitterSeconds)
+
+                                                    ' Wait with randomized backoff
+                                                    Await Task.Delay(finalDelaySeconds * 1000, cancelToken)
+
+                                                    ' tbThrottle.Value   Delay Per Submission
+                                                    '1   30 seconds
+                                                    '5   2.5 minutes
+                                                    '10  5 minutes
+                                                    '20  10 minutes
+                                                    '30  15 minutes
+
 
                                                 Catch ex As Exception
                                                     If Not cancelToken.IsCancellationRequested Then

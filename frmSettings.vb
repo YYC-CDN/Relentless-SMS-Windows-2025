@@ -9,19 +9,33 @@ Public Class frmSettings
         txtTextNowAPI.Clear()
     End Sub
 
-    Private Sub frmSettings_Load(sender As Object, e As EventArgs)
-
+    Private Sub frmSettings_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Me.BringToFront()
 
-        ' Load the API from file
-        'LoadTextNowAPI()
-
+        ' Load IPQualityScore API key from file
         LoadIPQualityScoreAPI()
 
-        ' Make the form topmost
-        'Me.TopMost = True
+        ' Load Mailman API keys from MailmanAPIs.txt
+        Try
+            Dim apiPath As String = "C:\RelentlessSMS\APIs\MailmanAPIs.txt"
+            If File.Exists(apiPath) Then
+                Dim keys() As String = File.ReadAllLines(apiPath)
+                If keys.Length >= 4 Then
+                    tbShodanAPI.Text = keys(0)
+                    tbZoomEyeAPI.Text = keys(1)
+                    tbSecurityTrailsAPI.Text = keys(2)
+                    tbSerpAPI.Text = keys(3)
+                End If
+            End If
+        Catch ex As Exception
+            MessageBox.Show("⚠ Could not load Mailman API keys: " & ex.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        End Try
+
 
     End Sub
+
+
+
 
     Private Sub btnAddTextNowAPI_Click(sender As Object, e As EventArgs) Handles btnAddTextNowAPI.Click
 
@@ -73,18 +87,18 @@ Public Class frmSettings
         End If
     End Sub
 
-    Private Sub btnIPQualityScore_Click(sender As Object, e As EventArgs) Handles btnIPQualityScore.Click
+    Private Sub btnIPQualityScore_Click(sender As Object, e As EventArgs)
 
         ' Get the current list of APIs from the file
-        Dim apis As String() = System.IO.File.ReadAllLines("C:\RelentlessSMS\APIs\IPQualityScoreAPI.txt")
+        Dim apis = File.ReadAllLines("C:\RelentlessSMS\APIs\IPQualityScoreAPI.txt")
 
         ' Add the new API to the list
-        Dim new_api As String = txtIPQualityScore.Text.Trim()
+        Dim new_api = txtIPQualityScore.Text.Trim
         If new_api <> "" Then
             ' Check if the API already exists in the list
             If Not apis.Contains(new_api) Then
                 ' Add the new API to the array
-                apis = apis.Where(Function(x) x.Trim() <> "").ToArray() ' Skip empty strings
+                apis = apis.Where(Function(x) x.Trim <> "").ToArray ' Skip empty strings
                 Array.Resize(apis, apis.Length + 1)
                 apis(apis.Length - 1) = new_api
             Else
@@ -94,7 +108,7 @@ Public Class frmSettings
         End If
 
         ' Write the updated list of APIs to the file
-        System.IO.File.WriteAllLines("C:\RelentlessSMS\APIs\IPQualityScoreAPI.txt", apis)
+        File.WriteAllLines("C:\RelentlessSMS\APIs\IPQualityScoreAPI.txt", apis)
 
         ' Show a message to confirm that the API has been saved
         MessageBox.Show("IP Quality Score API saved successfully               ", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
@@ -129,11 +143,15 @@ Public Class frmSettings
 
 
     Private Sub btnClose_Click(sender As Object, e As EventArgs) Handles btnClose.Click
+
+
+
+
         Me.Close()
     End Sub
 
 
-    Private Sub btnAddSMTP_Click(sender As Object, e As EventArgs) Handles btnAddSMTP.Click
+    Private Sub btnAddSMTP_Click(sender As Object, e As EventArgs)
         ' Validate the input
         If String.IsNullOrWhiteSpace(txtSMTPbox.Text) Then
             MessageBox.Show("SMTP address is required", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -151,8 +169,8 @@ Public Class frmSettings
         End If
 
         ' Write the SMTP settings to file
-        Dim smtpFilePath As String = "C:\RelentlessSMS\EmailInformation\SMTP.txt"
-        Dim sslValue As String = ""
+        Dim smtpFilePath = "C:\RelentlessSMS\EmailInformation\SMTP.txt"
+        Dim sslValue = ""
 
         If cbEnableSSL.SelectedIndex = 1 Then
             sslValue = "True"
@@ -160,33 +178,33 @@ Public Class frmSettings
             sslValue = "False"
         End If
 
-        Dim smtpSettings As String = String.Format("{0}{1}{2}{3}{4}",
-                                                    txtSMTPbox.Text.Trim(), vbCrLf,
-                                                    txtPort.Text.Trim(), vbCrLf,
+        Dim smtpSettings = String.Format("{0}{1}{2}{3}{4}",
+                                                    txtSMTPbox.Text.Trim, vbCrLf,
+                                                    txtPort.Text.Trim, vbCrLf,
                                                     sslValue)
 
-        System.IO.File.WriteAllText(smtpFilePath, smtpSettings)
+        File.WriteAllText(smtpFilePath, smtpSettings)
 
         MessageBox.Show("SMTP settings saved successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
     End Sub
 
-    Private Sub btnAddEmailPass_Click(sender As Object, e As EventArgs) Handles btnAddEmailPass.Click
+    Private Sub btnAddEmailPass_Click(sender As Object, e As EventArgs)
         ' Check if both email and password are provided
-        If txtEmailAddresses.Text.Trim() = "" Or txtEmailPassword.Text.Trim() = "" Then
+        If txtEmailAddresses.Text.Trim = "" Or txtEmailPassword.Text.Trim = "" Then
             MessageBox.Show("Please enter email address and password.")
             Return
         End If
 
         ' Check if email address is valid
-        If Not IsValidEmail(txtEmailAddresses.Text.Trim()) Then
+        If Not IsValidEmail(txtEmailAddresses.Text.Trim) Then
             MessageBox.Show("Invalid email address.")
             Return
         End If
 
         ' Append email address and password to the file
-        Dim filePath As String = "C:\RelentlessSMS\EmailInformation\EmailAddresses.txt"
-        Dim emailLine As String = $"{txtEmailAddresses.Text.Trim()} {txtEmailPassword.Text.Trim()}"
-        IO.File.AppendAllText(filePath, $"{emailLine}{Environment.NewLine}")
+        Dim filePath = "C:\RelentlessSMS\EmailInformation\EmailAddresses.txt"
+        Dim emailLine = $"{txtEmailAddresses.Text.Trim} {txtEmailPassword.Text.Trim}"
+        File.AppendAllText(filePath, $"{emailLine}{Environment.NewLine}")
 
         ' Clear the text boxes
         txtEmailAddresses.Clear()
@@ -207,16 +225,16 @@ Public Class frmSettings
 
     End Function
 
-    Private Sub LinkLabel2_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles LinkLabel2.LinkClicked
+    Private Sub LinkLabel2_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs)
 
-        Dim path As String = "C:\RelentlessSMS\APIs"
+        Dim path = "C:\RelentlessSMS\APIs"
         Process.Start("explorer.exe", path)
 
     End Sub
 
-    Private Sub LinkLabel1_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles LinkLabel1.LinkClicked
+    Private Sub LinkLabel1_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs)
         ' Launch the default browser and navigate to the webpage URL
-        Dim url As String = "https://www.ipqualityscore.com/phone-number-validator"
+        Dim url = "https://www.ipqualityscore.com/phone-number-validator"
         Process.Start(New ProcessStartInfo With {.FileName = url, .UseShellExecute = True})
     End Sub
 
@@ -224,6 +242,59 @@ Public Class frmSettings
         ' Launch the default browser and navigate to the webpage URL
         Dim url As String = "https://textbelt.com/purchase/?generateKey=1"
         Process.Start(New ProcessStartInfo With {.FileName = url, .UseShellExecute = True})
+    End Sub
+
+
+
+    Private Async Sub btnRunScraper_Click(sender As Object, e As EventArgs)
+        Try
+            If String.IsNullOrWhiteSpace(tbShodanAPI.Text) OrElse
+           String.IsNullOrWhiteSpace(tbZoomEyeAPI.Text) OrElse
+           String.IsNullOrWhiteSpace(tbSecurityTrailsAPI.Text) OrElse
+           String.IsNullOrWhiteSpace(tbSerpAPI.Text) Then
+
+                MessageBox.Show("All four API keys are required.", "Missing Keys", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Exit Sub
+            End If
+
+            ' Open scraper console
+            Dim console As New frmScraperConsole
+            console.Show()
+
+            ' Run scraper with live output
+            Await DiscoverMailmanProvidersAsync(
+            tbShodanAPI.Text.Trim,
+            tbZoomEyeAPI.Text.Trim,
+            tbSecurityTrailsAPI.Text.Trim,
+            tbSerpAPI.Text.Trim,
+            "C:\RelentlessSMS\Mailman\signup_urls.txt",
+            console
+        )
+
+        Catch ex As Exception
+            MessageBox.Show("❌ Scraper failed: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+
+
+    Private Sub btnSaveAPIs_Click(sender As Object, e As EventArgs)
+        Try
+            Dim apiPath = "C:\RelentlessSMS\APIs\MailmanAPIs.txt"
+
+            Dim apiLines As New List(Of String) From {
+            tbShodanAPI.Text.Trim,
+            tbZoomEyeAPI.Text.Trim,
+            tbSecurityTrailsAPI.Text.Trim,
+            tbSerpAPI.Text.Trim
+        }
+
+            File.WriteAllLines(apiPath, apiLines)
+            MessageBox.Show("✅ Mailman API keys saved successfully.", "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+        Catch ex As Exception
+            MessageBox.Show("❌ Failed to save Mailman API keys: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
 End Class

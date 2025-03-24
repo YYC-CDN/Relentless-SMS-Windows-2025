@@ -43,7 +43,7 @@ Public Class frmMain
 
 
         ' Set the form's title with the version and government use disclaimer
-        Me.Text = $"Version 032325-01 |  FOR OFFICIAL USE ONLY (FOUO) | Protected Critical Infrastructure Information (PCII): "
+        Me.Text = $"Version 032325-07 |  FOR OFFICIAL USE ONLY (FOUO) | Protected Critical Infrastructure Information (PCII): "
 
         ' Initialize startup tasks
         x.startup()

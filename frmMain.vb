@@ -24,6 +24,9 @@ Imports HtmlAgilityPack
 Imports System.Threading.Tasks
 
 Public Class frmMain
+    Public Shared allowConfirmLogging As Boolean = True
+    Private newColor As Color = Color.Red ' Declare newColor at class level
+    Private lastVPNState As Boolean? = Nothing
     Private imageFiles As String()
     Private random As New Random()
     Private provider_options As Dictionary(Of String, List(Of String))
@@ -34,131 +37,82 @@ Public Class frmMain
     Private cancelTokenSource As New CancellationTokenSource()
     Private cancelToken As CancellationToken = cancelTokenSource.Token
     Private mailmanTask As Task = Nothing
+    Private flashCount As Integer = 0
+    Private isFlashing As Boolean = False
+    Private originalBackColor As Color
+    Private isFirstVpnCheck As Boolean = True
+    Private lastVpnStatus As Boolean = True
 
 
     ' =======================================================================================
-    ' Form Load - Start Timer and Initial Fetch
+    ' 03/24/25 - Form Load - Stable and safe initialization
+    ' Delays VPN check to avoid flashing from early network errors.
+    ' =======================================================================================
+    ' =======================================================================================
+    ' 03/24/25 - FrmMain_Load - Main startup routine
+    ' Initializes form UI, API config, language settings, provider list, and delayed VPN check.
     ' =======================================================================================
     Private Sub FrmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        ' Set application window title
+        Me.Text = $"Version 032925-55 | SIM ENV: TIER 1 | OPSEC | FOUO | PCII"
 
-        ' Set the form's title with the version and government use disclaimer
-        Me.Text = $"Version 032325-07 |  FOR OFFICIAL USE ONLY (FOUO) | Protected Critical Infrastructure Information (PCII): "
 
-        ' Initialize startup tasks
+        ' Initialize required files and folders
         x.startup()
-        x.buildfiles() ' Initialize files if needed
+        x.buildfiles()
         x.InitializeProvidersFile()
 
-        LoadTargetHistory() ' Load history at startup
+        ' Load previous target entries
+        LoadTargetHistory()
 
+        ' Enable user input
         txtTargetNumber.ReadOnly = False
         cbImagesCheckbox.Checked = False
         txtVerificationResults.Clear()
 
+        ' Load API keys from disk
         Dim default_api As String = LoadAPI()
         Dim apiProxy As String = LoadProxyDetectionAPI()
 
+        ' Set language dropdown
         dbOutgoingLanguage.Text = "English (Default)"
         For Each language In language_options
             dbOutgoingLanguage.Items.Add(language.Key)
         Next
 
+        ' Apply consistent UI styling
         txtTargetNumber.ForeColor = Color.FromArgb(209, 219, 221)
         txtNumberofMessages.ForeColor = Color.FromArgb(209, 219, 221)
         txtSecondsBetween.ForeColor = Color.FromArgb(209, 219, 221)
 
-        ' Initialize AutoComplete
+        ' Enable AutoComplete
         txtTargetNumber.AutoCompleteMode = AutoCompleteMode.SuggestAppend
         txtTargetNumber.AutoCompleteSource = AutoCompleteSource.CustomSource
-        LoadTargetHistory()
+        txtTargetNumber.AutoCompleteCustomSource = AutoCompleteCollection
 
-        Try
-            FetchProxyDetails()
-        Catch ex As Exception
-            ' Ignore fetch errors
-        End Try
+        ' Load providers from Providers.txt into ComboBox
+        LoadProviderOptions()
 
-        VPN_Timer.Interval = 10000
+        ' Delay the first VPN check to avoid false alerts on startup
+        'StartupTimer.Interval = 3000
+        'StartupTimer.Start()
+
+        ' Start recurring VPN check every 1 seconds
+        VPN_Timer.Interval = 1000
         VPN_Timer.Start()
-        FetchProxyDetails()
 
-        ' Set directory path for storing files
-        Dim directoryPath As String = "C:\RelentlessSMS"
+        ' Set default tab count for Mailbait tool
+        txtOpenTabs.Text = "50"
 
-        ' Enable the target number textbox for user input
-        txtTargetNumber.ReadOnly = False
-
-        ' Uncheck the checkbox for images on startup
-        cbImagesCheckbox.Checked = False
-
-        ' Clear any previous content in the verification results textbox on load
-        txtVerificationResults.Clear()
-
-
-        ' Set the default language for the dropdown box
-        dbOutgoingLanguage.Text = "English (Default)"
-
-        ' Populate the language dropdown box with available languages
-        For Each language In language_options
-            dbOutgoingLanguage.Items.Add(language.Key)
-        Next
-
-        ' Set the font color of textboxes for consistency
-        txtTargetNumber.ForeColor = Color.FromArgb(209, 219, 221)
-        txtNumberofMessages.ForeColor = Color.FromArgb(209, 219, 221)
-        txtSecondsBetween.ForeColor = Color.FromArgb(209, 219, 221)
-
-        ' Set the informational message with increased font size
+        ' Set ethics disclaimer with formatting
         txtVerificationResults.SelectionStart = txtVerificationResults.TextLength
         txtVerificationResults.SelectionFont = New Font(txtVerificationResults.Font.FontFamily, txtVerificationResults.Font.Size + 3, FontStyle.Bold)
         txtVerificationResults.AppendText("We want to emphasize that using this tool ethically and responsibly is of utmost importance. It is critical to research and verify your target before using this tool, as using it on someone without proper justification can have severe consequences. This tool is intended for educational or testing purposes only and should not be used to harm or harass anyone. This service is provided 'as is' and with no express or implied warranties, endorsements, or associations. We assume no responsibility for any damages or losses resulting from your use of this service. Let's always use technology with integrity and responsibility." & vbCrLf)
         txtVerificationResults.SelectionFont = New Font(txtVerificationResults.Font.FontFamily, txtVerificationResults.Font.Size, FontStyle.Regular)
 
-        ' Set default number of open tabs for MailBait tool
-        txtOpenTabs.Text = "50"
-
-        ' Initialize the provider options dictionary
-        provider_options = New Dictionary(Of String, List(Of String))()
-
-        ' Load provider options from the file line by line
-        For Each line As String In File.ReadLines("C:\RelentlessSMS\Providers.txt")
-            If Not line.StartsWith("#") AndAlso Not String.IsNullOrWhiteSpace(line) Then  ' Ignore commented or empty lines
-                Dim parts As String() = line.Split(","c)   ' Split the line into provider name and email domain
-                If parts.Length = 2 Then
-                    Dim provider As String = parts(0).Trim() ' Trim leading/trailing whitespaces from provider
-                    Dim emailDomain As String = parts(1).Trim() ' Trim whitespaces from email domain
-
-                    ' Add email domains to the provider options dictionary
-                    If provider_options.ContainsKey(provider) Then
-                        provider_options(provider).Add(emailDomain) ' Add domain if provider already exists
-                    Else
-                        provider_options.Add(provider, New List(Of String) From {emailDomain}) ' Create new list if provider doesn't exist
-                    End If
-                End If
-            End If
-        Next
-
-        ' Populate the ComboBox with available provider keys
-        dbSelectCellProvider.Items.AddRange(provider_options.Keys.ToArray())
-
-        ' Fetch and display proxy details from API
-        Try
-            FetchProxyDetails()
-        Catch ex As Exception
-            ' Handle any errors when fetching proxy details (no UI message shown here)
-        End Try
-
-        ' Initialize VPN Update Timer to trigger every 10 seconds
-        VPN_Timer.Interval = 500 ' Set interval (XX seconds) for regular VPN status updates
-        VPN_Timer.Start() ' Start the timer
-
-        ' Perform initial fetch for proxy details
-        FetchProxyDetails()
-
-        ' Keep STOP button enabled
+        ' Enable and style STOP button
         btnStopAll.Enabled = True
-
         With btnStopAll
             .BackColor = Color.Firebrick
             .ForeColor = Color.White
@@ -166,14 +120,14 @@ Public Class frmMain
             .Font = New Font(.Font.FontFamily, .Font.Size + 1, FontStyle.Bold)
         End With
 
-        ' Special code to clean up the target history file if it's dirty
+        ' Final cleanup of history file
         x.CleanTargetHistory()
 
+        ' NOTE: No call to FetchProxyDetails() here to avoid startup flashing
     End Sub
-
-
     ' =======================================================================================
-    ' Load Provider Options
+    ' LoadProviderOptions - Reads C:\RelentlessSMS\Providers.txt and populates the dropdown
+    ' Ignores commented and malformed lines.
     ' =======================================================================================
     Private Sub LoadProviderOptions()
         provider_options = New Dictionary(Of String, List(Of String))()
@@ -196,16 +150,15 @@ Public Class frmMain
             Next
         End If
 
+        ' Populate ComboBox from loaded provider keys
+        dbSelectCellProvider.Items.Clear()
         dbSelectCellProvider.Items.AddRange(provider_options.Keys.ToArray())
     End Sub
 
-
-
-
     ' =======================================================================================
-    ' Fetch Proxy, VPN, and Region Details
+    ' FetchProxyDetails - Checks VPN/Proxy using IPQualityScore and updates UI labels.
+    ' Triggers flashing alert only on meaningful VPN drop or detection failure.
     ' =======================================================================================
-
     Private Async Sub FetchProxyDetails()
         Try
             If Not File.Exists(x.ApiKeyPath) Then Exit Sub
@@ -213,90 +166,172 @@ Public Class frmMain
             Dim apiKey As String = File.ReadAllText(x.ApiKeyPath).Trim()
             Dim ipAddress As String = Await GetIPAddressAsync()
             Dim apiUrl As String = $"https://www.ipqualityscore.com/api/json/ip/{apiKey}/{ipAddress}"
-
-            ' Use TLS 1.2+
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
 
-            ' Send API request
+            Dim vpn As Boolean = False
+            Dim proxy As Boolean = False
+            Dim likelyVpn As Boolean = False
+            Dim region As String = ""
+            Dim country As String = ""
+            Dim isp As String = ""
+            Dim org As String = ""
+
             Using client As New HttpClient()
                 Dim responseJson As String = Await client.GetStringAsync(apiUrl).ConfigureAwait(False)
                 Dim responseObj As JObject = JObject.Parse(responseJson)
 
-                ' Extract Proxy & VPN Data
-                Dim proxyValue As String = responseObj("proxy")?.ToString()
-                Dim regionValue As String = responseObj("region")?.ToString()
-                Dim vpnValue As String = responseObj("vpn")?.ToString()
+                ' Extract VPN-related fields
+                proxy = responseObj("proxy")?.ToString().ToLower() = "true"
+                vpn = responseObj("vpn")?.ToString().ToLower() = "true"
+                Dim tor As Boolean = responseObj("tor")?.ToString().ToLower() = "true"
+                Dim hosting As Boolean = responseObj("hosting")?.ToString().ToLower() = "true"
+                org = responseObj("organization")?.ToString()
+                isp = responseObj("ISP")?.ToString()
+                region = responseObj("region")?.ToString()
+                country = responseObj("country_code")?.ToString()
+                Dim riskScore As Integer = CInt(responseObj("fraud_score")?.ToString())
 
-                ' Update UI
-                lblVPN.Text = "VPN: " & If(Not String.IsNullOrEmpty(vpnValue), vpnValue, "Not Available")
-                lblRegion.Text = "Region: " & If(Not String.IsNullOrEmpty(regionValue), regionValue, "Not Available")
-                lblProxy.Text = "Proxy: " & If(Not String.IsNullOrEmpty(proxyValue), proxyValue, "Not Available")
-            End Using
+                likelyVpn = vpn OrElse proxy OrElse tor OrElse hosting OrElse
+                        (Not String.IsNullOrEmpty(org) AndAlso org.ToLower().Contains("proton")) OrElse
+                        (riskScore >= 75)
 
-        Catch ex As Exception
-            ' Suppressed errors
-        End Try
+                ' Update labels safely
+                If Me.lblVPN.InvokeRequired Then
+                    Me.Invoke(Sub()
+                                  Me.lblVPN.Text = "VPN: " & vpn.ToString().ToUpper()
+                                  Me.lblProxy.Text = "Proxy: " & proxy.ToString().ToUpper()
+                                  Me.lblRegion.Text = "Region: " & region
+                                  Me.lblCountryCode.Text = "Country Code: " & country
+                                  Me.lblYourIP.Text = "Your IP: " & ipAddress
+                                  Me.lblISP.Text = "ISP: " & isp
 
+                                  ' =======================================================================================
+                                  ' Lock buttons if VPN is disconnected, ISP is XMission (home), or in a waiting state
+                                  ' =======================================================================================
+                                  If lblISP.Text.ToLower().Contains("xmission") OrElse lblVPN.Text = "VPN: FALSE" OrElse lblVPNTrust.Text = "Likely VPN: FALSE" Then
+                                      btnMailman.Enabled = False
+                                      btnStopAll.Enabled = False
+                                      btnEmailValidation.Enabled = False
+                                      btnMailbaitSubmit.Enabled = False
+                                      btnVerifyNumber.Enabled = False
+                                      btnSendSMS.Enabled = False
+                                      btnSettings.Enabled = False
+                                      dbSelectCellProvider.Enabled = False
+                                      btnEmailToSMS.Enabled = False
+                                      btnChangeName.Enabled = False
+                                      cbImagesCheckbox.Enabled = False
+                                  Else
+                                      ' Enable buttons when VPN is connected and ISP is not XMission
+                                      btnMailman.Enabled = True
+                                      btnStopAll.Enabled = True
+                                      btnEmailValidation.Enabled = True
+                                      btnMailbaitSubmit.Enabled = True
+                                      btnVerifyNumber.Enabled = True
+                                      btnSendSMS.Enabled = True
+                                      btnSettings.Enabled = True
+                                      dbSelectCellProvider.Enabled = True
+                                      btnEmailToSMS.Enabled = True
+                                      btnChangeName.Enabled = True
+                                      cbImagesCheckbox.Enabled = True
+                                  End If
 
+                                  ' =====================================================================================
+                                  ' If ISP is XMission (home network), lock all buttons (prevent sending messages)
+                                  ' =====================================================================================
+                                  If lblISP.Text.ToLower().Contains("xmission") Then
+                                      btnMailman.Enabled = False
+                                      btnStopAll.Enabled = False
+                                      btnEmailValidation.Enabled = False
+                                      btnMailbaitSubmit.Enabled = False
+                                      btnVerifyNumber.Enabled = False
+                                      btnSendSMS.Enabled = False
+                                      btnSettings.Enabled = False
+                                      dbSelectCellProvider.Enabled = False
+                                      btnEmailToSMS.Enabled = False
+                                      btnChangeName.Enabled = False
+                                      cbImagesCheckbox.Enabled = False
+                                  End If
 
+                                  ' =======================================================================================
+                                  ' XMission OVERRIDE: This ISP is NEVER a VPN. Enforce lockdown if detected.
+                                  ' =======================================================================================
+                                  If Me.lblISP.Text.ToLower().Contains("xmission") Then
 
-        Try
-            ' Read API key from file
-            Dim apiKeyFilePath As String = "C:\RelentlessSMS\APIs\IPQualityScoreAPI.txt"
-            If Not File.Exists(apiKeyFilePath) Then
-                'MessageBox.Show("API key file not found. Please add one in Settings.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                Exit Sub
-            End If
-
-            Dim apiKey As String = File.ReadAllText(apiKeyFilePath).Trim()
-
-            ' Get Public IP Address
-            Dim ipAddress As String = Await GetIPAddressAsync()
-            Dim apiUrl As String = $"https://www.ipqualityscore.com/api/json/ip/{apiKey}/{ipAddress}"
-
-            ' Force the application to use TLS 1.2+
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
-
-            ' Send API request
-            Using client As New HttpClient()
-                Dim responseJson As String = Await client.GetStringAsync(apiUrl).ConfigureAwait(False)
-                Dim responseObj As JObject = JObject.Parse(responseJson)
-
-                ' Extract Proxy & VPN Data
-                Dim proxyValue As String = responseObj("proxy")?.ToString()
-                Dim countryCodeValue As String = responseObj("country_code")?.ToString()
-                Dim regionValue As String = responseObj("region")?.ToString()
-                Dim vpnValue As String = responseObj("vpn")?.ToString()
-
-                ' Update UI Labels Safely
-                If lblVPN.InvokeRequired Then
-                    lblVPN.Invoke(Sub() lblVPN.Text = "VPN: " & If(Not String.IsNullOrEmpty(vpnValue), vpnValue, "Not Available"))
-                    lblRegion.Invoke(Sub() lblRegion.Text = "Region: " & If(Not String.IsNullOrEmpty(regionValue), regionValue, "Not Available"))
-                    lblProxy.Invoke(Sub() lblProxy.Text = "Proxy: " & If(Not String.IsNullOrEmpty(proxyValue), proxyValue, "Not Available"))
-                    lblCountryCode.Invoke(Sub() lblCountryCode.Text = "Country Code: " & If(Not String.IsNullOrEmpty(countryCodeValue), countryCodeValue, "Not Available"))
+                                      ' =======================================================================================
+                                      ' Flash once when VPN reconnects and returns to home ISP location (XMission)
+                                      ' =======================================================================================
+                                      If Me.lblISP.Text.ToLower().Contains("xmission") Then
+                                          'FlashOnceOnVPNReconnect()
+                                      End If
+                                      Me.lblVPN.Text = "VPN: FALSE"
+                                      Me.lblVPNTrust.Text = "Likely VPN: FALSE"
+                                  End If
+                                  Me.lblVPNTrust.Text = "Likely VPN: " & likelyVpn.ToString().ToUpper()
+                              End Sub)
                 Else
-                    lblVPN.Text = "VPN: " & If(Not String.IsNullOrEmpty(vpnValue), vpnValue, "Not Available")
-                    lblRegion.Text = "Region: " & If(Not String.IsNullOrEmpty(regionValue), regionValue, "Not Available")
-                    lblProxy.Text = "Proxy: " & If(Not String.IsNullOrEmpty(proxyValue), proxyValue, "Not Available")
-                    lblCountryCode.Text = "Country Code: " & If(Not String.IsNullOrEmpty(countryCodeValue), countryCodeValue, "Not Available")
+                    Me.lblVPN.Text = "VPN: " & vpn.ToString().ToUpper()
+                    Me.lblProxy.Text = "Proxy: " & proxy.ToString().ToUpper()
+                    Me.lblRegion.Text = "Region: " & region
+                    Me.lblCountryCode.Text = "Country Code: " & country
+                    Me.lblYourIP.Text = "Your IP: " & ipAddress
+                    Me.lblISP.Text = "ISP: " & isp
+                    Me.lblVPNTrust.Text = "Likely VPN: " & likelyVpn.ToString().ToUpper()
                 End If
+
+                ' === Trigger flash ONLY if it's not the first check and VPN is now down ===
+                If Not vpn AndAlso (Not isFirstVpnCheck OrElse lastVpnStatus = True) Then
+                    TriggerVPNAlert()
+                End If
+
+                ' Update tracking flags
+                lastVpnStatus = vpn
+                isFirstVpnCheck = False
             End Using
 
-        Catch ex As HttpRequestException
-            'MessageBox.Show("Error fetching VPN data: Network issue - " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        Catch ex As TaskCanceledException
-            'MessageBox.Show("Error fetching VPN data: Request timed out - " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        Catch ex As WebException
-            'MessageBox.Show("Error fetching VPN data: Web error - " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         Catch ex As Exception
-            'MessageBox.Show("Error fetching VPN data: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            ' === Connection failed or VPN status could not be fetched ===
+            If Me.txtOutgoingMessages.InvokeRequired Then
+                Me.Invoke(Sub()
+                              Me.txtOutgoingMessages.Clear()
+                              Me.txtOutgoingMessages.AppendText("⚠ VPN detection failed." & Environment.NewLine)
+
+                              Me.lblVPN.Text = "VPN: Unavailable"
+                              Me.lblProxy.Text = "Proxy: Unavailable"
+                              Me.lblRegion.Text = "Region: Unavailable"
+                              Me.lblCountryCode.Text = "Country Code: Unavailable"
+                              Me.lblYourIP.Text = "Your IP: Unavailable"
+                              Me.lblISP.Text = "ISP: Unavailable"
+                              Me.lblVPNTrust.Text = "Likely VPN: Unavailable"
+
+                              ' Trigger flash if not first check
+                              If Not isFirstVpnCheck Then TriggerVPNAlert()
+
+                              lastVpnStatus = False
+                              isFirstVpnCheck = False
+                          End Sub)
+            Else
+                Me.txtOutgoingMessages.Clear()
+                Me.txtOutgoingMessages.AppendText("⚠ VPN detection failed." & Environment.NewLine)
+
+                Me.lblVPN.Text = "VPN: Unavailable"
+                Me.lblProxy.Text = "Proxy: Unavailable"
+                Me.lblRegion.Text = "Region: Unavailable"
+                Me.lblCountryCode.Text = "Country Code: Unavailable"
+                Me.lblYourIP.Text = "Your IP: Unavailable"
+                Me.lblISP.Text = "ISP: Unavailable"
+                Me.lblVPNTrust.Text = "Likely VPN: Unavailable"
+
+                If Not isFirstVpnCheck Then TriggerVPNAlert()
+
+                lastVpnStatus = False
+                isFirstVpnCheck = False
+            End If
         End Try
     End Sub
 
 
-
     ' =======================================================================================
-    ' Fetch Public IP Address
+    ' GetIPAddressAsync - Fetches public IP from ipify
     ' =======================================================================================
     Private Async Function GetIPAddressAsync() As Task(Of String)
         Try
@@ -307,6 +342,92 @@ Public Class frmMain
             Return "Unknown"
         End Try
     End Function
+
+
+
+    ' =======================================================================================
+    ' Timer tick used to delay VPN fetch until 5 seconds after startup
+    ' =======================================================================================
+    Private Sub StartupTimer_Tick(sender As Object, e As EventArgs) Handles StartupTimer.Tick
+        StartupTimer.Stop()
+        FetchProxyDetails()
+    End Sub
+
+    Private Sub RestoreAllFlashingFieldColors()
+        Me.BackColor = Color.FromArgb(30, 30, 30)
+        txtTargetNumber.BackColor = Color.FromArgb(30, 30, 30)
+        txtVerificationResults.BackColor = Color.FromArgb(30, 30, 30)
+        txtNumberofMessages.BackColor = Color.FromArgb(30, 30, 30)
+        txtSecondsBetween.BackColor = Color.FromArgb(30, 30, 30)
+        txtOpenTabs.BackColor = Color.FromArgb(30, 30, 30)
+        txtSuccessful.BackColor = Color.FromArgb(30, 30, 30)
+        txtFailed.BackColor = Color.FromArgb(30, 30, 30)
+        txtOutgoingMessages.BackColor = Color.FromArgb(30, 30, 30)
+        dbOutgoingLanguage.BackColor = Color.FromArgb(30, 30, 30)
+        dbSelectCellProvider.BackColor = Color.FromArgb(30, 30, 30)
+    End Sub
+
+    ' =======================================================================================
+    ' Flashes the background red if VPN is missing or detection fails
+    ' =======================================================================================
+    Private Sub tmrAlertFlash_Tick(sender As Object, e As EventArgs) Handles tmrAlertFlash.Tick
+        ' 🔌 Exit early if VPN is now active
+        If lastVpnStatus = True Then
+            tmrAlertFlash.Stop()
+            RestoreAllFlashingFieldColors()
+            isFlashing = False
+            flashCount = 0
+            Exit Sub
+        End If
+
+        ' 🔁 Continue flashing if still not connected
+        If flashCount >= 10 Then
+            tmrAlertFlash.Stop()
+            RestoreAllFlashingFieldColors()
+            isFlashing = False
+            flashCount = 0
+        Else
+
+            ' =======================================================================================
+            ' Flash the background red for the following fields as well
+            ' =======================================================================================
+            txtTargetNumber.BackColor = Color.Red
+            txtNumberofMessages.BackColor = Color.Red
+            txtSecondsBetween.BackColor = Color.Red
+            txtOpenTabs.BackColor = Color.Red
+            txtSuccessful.BackColor = Color.Red
+            txtFailed.BackColor = Color.Red
+            txtOutgoingMessages.BackColor = Color.Red
+            txtVerificationResults.BackColor = Color.Red
+            Me.BackColor = newColor
+            txtTargetNumber.BackColor = newColor
+            txtVerificationResults.BackColor = newColor
+            txtNumberofMessages.BackColor = newColor
+            txtSecondsBetween.BackColor = newColor
+            txtOpenTabs.BackColor = newColor
+            txtSuccessful.BackColor = newColor
+            txtFailed.BackColor = newColor
+            txtOutgoingMessages.BackColor = newColor
+            dbOutgoingLanguage.BackColor = newColor
+            dbSelectCellProvider.BackColor = newColor
+            flashCount += 1
+        End If
+    End Sub
+
+
+
+    ' =======================================================================================
+    ' Triggers a flash alert using the red/gray flashing background
+    ' =======================================================================================
+    Private Sub TriggerVPNAlert()
+        If Not isFlashing Then
+            isFlashing = True
+            originalBackColor = Me.BackColor
+            flashCount = 0
+            tmrAlertFlash.Start()
+        End If
+    End Sub
+
 
 
     ' =======================================================================================
@@ -400,7 +521,7 @@ Public Class frmMain
         btnEmailToSMS.Enabled = hasAtSymbol
         btnMailbaitSubmit.Enabled = hasAtSymbol
         btnMailman.Enabled = hasAtSymbol
-        btnAutoDialer.Enabled = Not hasAtSymbol AndAlso hasTenDigits
+        ' btnAutoDialer.Enabled = Not hasAtSymbol AndAlso hasTenDigits
 
 
         ' Save valid input to history
@@ -1157,25 +1278,42 @@ Public Class frmMain
         x.ScheduleDeviceNameChange()
     End Sub
 
-    Private Sub btnAutoDialer_Click(sender As Object, e As EventArgs) Handles btnAutoDialer.Click
-        Dim targetNumber As String = txtTargetNumber.Text.Trim()
-        Dim wavFilePath As String = "C:\RelentlessSMS\Audio\message.wav" ' Change this path if needed
-        Dim repeatCount As Integer = 3 ' Set as per your needs
+    Private Sub btnAutoDialer_Click(sender As Object, e As EventArgs)
+        Dim targetNumber = txtTargetNumber.Text.Trim
+        Dim wavFilePath = "C:\RelentlessSMS\Audio\message.wav" ' Change this path if needed
+        Dim repeatCount = 3 ' Set as per your needs
 
         If String.IsNullOrWhiteSpace(targetNumber) Then
             MessageBox.Show("Enter a valid phone number.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             Exit Sub
         End If
 
-        Dim confirm As DialogResult = MessageBox.Show($"Dial {targetNumber} and play audio {repeatCount} times?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+        Dim confirm = MessageBox.Show($"Dial {targetNumber} and play audio {repeatCount} times?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
         If confirm = DialogResult.Yes Then
-            x_AutoDialer.StartAutoDialer(targetNumber, wavFilePath, repeatCount)
+            StartAutoDialer(targetNumber, wavFilePath, repeatCount)
         End If
     End Sub
 
 
+    ' =======================================================================================
+    ' Flashes the form once when VPN returns and detects XMission
+    ' =======================================================================================
+    '    Dim originalColor As Color = Me.BackColor
 
-
+    '    ' =======================================================================================
+    '    ' Flash the background red for the following fields as well
+    '    ' =======================================================================================
+    '    txtTargetNumber.BackColor = Color.Red
+    '    txtNumberofMessages.BackColor = Color.Red
+    '    txtSecondsBetween.BackColor = Color.Red
+    '    txtOpenTabs.BackColor = Color.Red
+    '    txtSuccessful.BackColor = Color.Red
+    '    txtFailed.BackColor = Color.Red
+    '    txtOutgoingMessages.BackColor = Color.Red
+    '    txtVerificationResults.BackColor = Color.Red
+    '    Application.DoEvents()
+    '    Threading.Thread.Sleep(600) ' Slowed flash for UI sync
+    '    Me.BackColor = originalColor
+    '    Application.DoEvents()
+    'End Sub
 End Class
-
-' =======================================------

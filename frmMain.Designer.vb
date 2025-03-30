@@ -39,7 +39,6 @@ Partial Class frmMain
         txtNumberofMessages = New TextBox()
         number_of_messages_label = New Label()
         btnSendSMS = New Button()
-        txtOutgoingMessages = New TextBox()
         pbAllFunctions = New ProgressBar()
         txtTargetNumber = New TextBox()
         btnSettings = New Button()
@@ -61,11 +60,15 @@ Partial Class frmMain
         txtFailed = New TextBox()
         btnChangeName = New Button()
         TextBox1 = New TextBox()
-        btnAutoDialer = New Button()
         lblConcurrentMailman = New Label()
         tbConcurrent = New TrackBar()
         tbThrottle = New TrackBar()
         Label6 = New Label()
+        Label8 = New Label()
+        txtConfirmed = New TextBox()
+        txtOutgoingMessages = New RichTextBox()
+        txtConfirm = New RichTextBox()
+        cbHumanMode = New CheckBox()
         Label4 = New Label()
         lblProxy = New Label()
         lblCountryCode = New Label()
@@ -75,6 +78,12 @@ Partial Class frmMain
         lblTimeElapsed = New Label()
         TmrTimeElapsed = New Timer(components)
         lblElapsed = New Label()
+        lblYourIP = New Label()
+        lblISP = New Label()
+        lblVPNTrust = New Label()
+        tmrAlertFlash = New Timer(components)
+        StartupTimer = New Timer(components)
+        cbBusinessHours = New CheckBox()
         CType(SplitContainer1, ComponentModel.ISupportInitialize).BeginInit()
         SplitContainer1.Panel1.SuspendLayout()
         SplitContainer1.SuspendLayout()
@@ -90,7 +99,7 @@ Partial Class frmMain
         cbImagesCheckbox.CheckState = CheckState.Checked
         cbImagesCheckbox.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         cbImagesCheckbox.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        cbImagesCheckbox.Location = New Point(239, 281)
+        cbImagesCheckbox.Location = New Point(235, 308)
         cbImagesCheckbox.Name = "cbImagesCheckbox"
         cbImagesCheckbox.Size = New Size(411, 25)
         cbImagesCheckbox.TabIndex = 1
@@ -103,7 +112,7 @@ Partial Class frmMain
         phone_number_label.AutoSize = True
         phone_number_label.Font = New Font("Segoe UI Variable Display", 21.75F, FontStyle.Bold, GraphicsUnit.Point)
         phone_number_label.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        phone_number_label.Location = New Point(488, 24)
+        phone_number_label.Location = New Point(290, 24)
         phone_number_label.Name = "phone_number_label"
         phone_number_label.Size = New Size(348, 38)
         phone_number_label.TabIndex = 3
@@ -152,7 +161,7 @@ Partial Class frmMain
         PictureBox1.Image = CType(resources.GetObject("PictureBox1.Image"), Image)
         PictureBox1.Location = New Point(0, 0)
         PictureBox1.Name = "PictureBox1"
-        PictureBox1.Size = New Size(211, 631)
+        PictureBox1.Size = New Size(211, 697)
         PictureBox1.TabIndex = 3
         PictureBox1.TabStop = False
         ' 
@@ -162,12 +171,12 @@ Partial Class frmMain
         btnEmailToSMS.BackgroundImageLayout = ImageLayout.Center
         btnEmailToSMS.Cursor = Cursors.Hand
         btnEmailToSMS.FlatAppearance.BorderColor = Color.Black
-        btnEmailToSMS.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Bold, GraphicsUnit.Point)
+        btnEmailToSMS.Font = New Font("Segoe UI Variable Small", 8.25F, FontStyle.Regular, GraphicsUnit.Point)
         btnEmailToSMS.ForeColor = SystemColors.Info
         btnEmailToSMS.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnEmailToSMS.Location = New Point(11, 172)
+        btnEmailToSMS.Location = New Point(106, 135)
         btnEmailToSMS.Name = "btnEmailToSMS"
-        btnEmailToSMS.Size = New Size(190, 37)
+        btnEmailToSMS.Size = New Size(95, 50)
         btnEmailToSMS.TabIndex = 8
         btnEmailToSMS.Text = "Email to SMS Campaign"
         ToolTip1.SetToolTip(btnEmailToSMS, "Use your internal email address to send messages to the target, the ones you added in Settings.")
@@ -181,7 +190,7 @@ Partial Class frmMain
         dbSelectCellProvider.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
         dbSelectCellProvider.FormattingEnabled = True
         dbSelectCellProvider.ItemHeight = 17
-        dbSelectCellProvider.Location = New Point(430, 242)
+        dbSelectCellProvider.Location = New Point(430, 265)
         dbSelectCellProvider.MaxDropDownItems = 15
         dbSelectCellProvider.Name = "dbSelectCellProvider"
         dbSelectCellProvider.Size = New Size(263, 25)
@@ -195,7 +204,7 @@ Partial Class frmMain
         txtSecondsBetween.BorderStyle = BorderStyle.None
         txtSecondsBetween.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Regular, GraphicsUnit.Point)
         txtSecondsBetween.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        txtSecondsBetween.Location = New Point(654, 171)
+        txtSecondsBetween.Location = New Point(654, 186)
         txtSecondsBetween.Name = "txtSecondsBetween"
         txtSecondsBetween.Size = New Size(32, 20)
         txtSecondsBetween.TabIndex = 3
@@ -207,7 +216,7 @@ Partial Class frmMain
         lblOutgoingLanguage.AutoSize = True
         lblOutgoingLanguage.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Regular, GraphicsUnit.Point)
         lblOutgoingLanguage.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        lblOutgoingLanguage.Location = New Point(235, 205)
+        lblOutgoingLanguage.Location = New Point(235, 226)
         lblOutgoingLanguage.Name = "lblOutgoingLanguage"
         lblOutgoingLanguage.Size = New Size(294, 20)
         lblOutgoingLanguage.TabIndex = 8
@@ -219,7 +228,7 @@ Partial Class frmMain
         lblSecondsBetween.AutoSize = True
         lblSecondsBetween.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Regular, GraphicsUnit.Point)
         lblSecondsBetween.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        lblSecondsBetween.Location = New Point(235, 170)
+        lblSecondsBetween.Location = New Point(235, 185)
         lblSecondsBetween.Name = "lblSecondsBetween"
         lblSecondsBetween.Size = New Size(412, 20)
         lblSecondsBetween.TabIndex = 6
@@ -234,7 +243,7 @@ Partial Class frmMain
         dbOutgoingLanguage.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
         dbOutgoingLanguage.FormattingEnabled = True
         dbOutgoingLanguage.ItemHeight = 17
-        dbOutgoingLanguage.Location = New Point(535, 202)
+        dbOutgoingLanguage.Location = New Point(535, 223)
         dbOutgoingLanguage.Name = "dbOutgoingLanguage"
         dbOutgoingLanguage.Size = New Size(158, 25)
         dbOutgoingLanguage.TabIndex = 9
@@ -246,7 +255,7 @@ Partial Class frmMain
         txtNumberofMessages.BorderStyle = BorderStyle.None
         txtNumberofMessages.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Regular, GraphicsUnit.Point)
         txtNumberofMessages.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        txtNumberofMessages.Location = New Point(630, 141)
+        txtNumberofMessages.Location = New Point(630, 142)
         txtNumberofMessages.Name = "txtNumberofMessages"
         txtNumberofMessages.Size = New Size(37, 20)
         txtNumberofMessages.TabIndex = 2
@@ -258,7 +267,7 @@ Partial Class frmMain
         number_of_messages_label.AutoSize = True
         number_of_messages_label.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Regular, GraphicsUnit.Point)
         number_of_messages_label.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        number_of_messages_label.Location = New Point(235, 140)
+        number_of_messages_label.Location = New Point(235, 141)
         number_of_messages_label.Name = "number_of_messages_label"
         number_of_messages_label.Size = New Size(392, 20)
         number_of_messages_label.TabIndex = 4
@@ -270,41 +279,26 @@ Partial Class frmMain
         btnSendSMS.BackgroundImageLayout = ImageLayout.Center
         btnSendSMS.Cursor = Cursors.Hand
         btnSendSMS.FlatAppearance.BorderColor = Color.Black
-        btnSendSMS.Font = New Font("Segoe UI Variable Display", 9.75F, FontStyle.Bold, GraphicsUnit.Point)
+        btnSendSMS.Font = New Font("Segoe UI Variable Small", 8.25F, FontStyle.Regular, GraphicsUnit.Point)
         btnSendSMS.ForeColor = SystemColors.Info
         btnSendSMS.ImageAlign = Drawing.ContentAlignment.MiddleLeft
         btnSendSMS.Location = New Point(11, 135)
         btnSendSMS.Name = "btnSendSMS"
-        btnSendSMS.Size = New Size(190, 37)
+        btnSendSMS.Size = New Size(95, 50)
         btnSendSMS.TabIndex = 7
         btnSendSMS.Text = "TEXTBELT SMS Campaign"
         ToolTip1.SetToolTip(btnSendSMS, "TEXTBELT | Starts the SMS/Text Message Campaign against a regular cellular number" & vbCrLf & "that recieves regular text messages, or SMS messages.")
         btnSendSMS.UseVisualStyleBackColor = False
         ' 
-        ' txtOutgoingMessages
-        ' 
-        txtOutgoingMessages.BackColor = Color.FromArgb(CByte(30), CByte(30), CByte(30))
-        txtOutgoingMessages.BorderStyle = BorderStyle.None
-        txtOutgoingMessages.Font = New Font("Segoe UI Variable Display Semib", 9.75F, FontStyle.Bold, GraphicsUnit.Point)
-        txtOutgoingMessages.ForeColor = Color.LightGreen
-        txtOutgoingMessages.Location = New Point(231, 497)
-        txtOutgoingMessages.Multiline = True
-        txtOutgoingMessages.Name = "txtOutgoingMessages"
-        txtOutgoingMessages.PlaceholderText = "Preview of Target Screen"
-        txtOutgoingMessages.ReadOnly = True
-        txtOutgoingMessages.Size = New Size(861, 87)
-        txtOutgoingMessages.TabIndex = 99
-        txtOutgoingMessages.TextAlign = HorizontalAlignment.Center
-        ' 
         ' pbAllFunctions
         ' 
         pbAllFunctions.BackColor = Color.FromArgb(CByte(34), CByte(39), CByte(42))
         pbAllFunctions.ForeColor = Color.FromArgb(CByte(34), CByte(39), CByte(42))
-        pbAllFunctions.Location = New Point(307, 591)
+        pbAllFunctions.Location = New Point(234, 659)
         pbAllFunctions.MarqueeAnimationSpeed = 200
         pbAllFunctions.Maximum = 500
         pbAllFunctions.Name = "pbAllFunctions"
-        pbAllFunctions.Size = New Size(589, 25)
+        pbAllFunctions.Size = New Size(661, 25)
         pbAllFunctions.TabIndex = 11
         ' 
         ' txtTargetNumber
@@ -317,7 +311,7 @@ Partial Class frmMain
         txtTargetNumber.MaxLength = 45
         txtTargetNumber.Name = "txtTargetNumber"
         txtTargetNumber.PlaceholderText = "202456TEST or example@domain.ca"
-        txtTargetNumber.Size = New Size(856, 28)
+        txtTargetNumber.Size = New Size(456, 28)
         txtTargetNumber.TabIndex = 1
         txtTargetNumber.TextAlign = HorizontalAlignment.Center
         ToolTip1.SetToolTip(txtTargetNumber, "This is your TARGET NUMBER or EMAIL. Be very, very sure this is the" & vbCrLf & "number you want to influence. Don't harass innocent people. ")
@@ -329,12 +323,12 @@ Partial Class frmMain
         btnSettings.BackgroundImageLayout = ImageLayout.Center
         btnSettings.Cursor = Cursors.Hand
         btnSettings.FlatAppearance.BorderColor = Color.Black
-        btnSettings.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Bold, GraphicsUnit.Point)
+        btnSettings.Font = New Font("Segoe UI Variable Small", 8.25F, FontStyle.Regular, GraphicsUnit.Point)
         btnSettings.ForeColor = SystemColors.ControlLightLight
         btnSettings.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnSettings.Location = New Point(11, 437)
+        btnSettings.Location = New Point(11, 441)
         btnSettings.Name = "btnSettings"
-        btnSettings.Size = New Size(190, 37)
+        btnSettings.Size = New Size(190, 35)
         btnSettings.TabIndex = 11
         btnSettings.Text = "Settings"
         ToolTip1.SetToolTip(btnSettings, "Program Settings")
@@ -346,12 +340,12 @@ Partial Class frmMain
         btnClose.BackgroundImageLayout = ImageLayout.Center
         btnClose.Cursor = Cursors.Hand
         btnClose.FlatAppearance.BorderColor = Color.Black
-        btnClose.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Bold, GraphicsUnit.Point)
+        btnClose.Font = New Font("Segoe UI Variable Small", 8.25F, FontStyle.Regular, GraphicsUnit.Point)
         btnClose.ForeColor = SystemColors.ControlLightLight
         btnClose.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnClose.Location = New Point(11, 476)
+        btnClose.Location = New Point(11, 480)
         btnClose.Name = "btnClose"
-        btnClose.Size = New Size(190, 37)
+        btnClose.Size = New Size(190, 35)
         btnClose.TabIndex = 12
         btnClose.Text = "Close"
         ToolTip1.SetToolTip(btnClose, "Close Relentless SMS")
@@ -367,12 +361,12 @@ Partial Class frmMain
         btnVerifyNumber.BackColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
         btnVerifyNumber.Cursor = Cursors.Hand
         btnVerifyNumber.FlatAppearance.BorderColor = Color.Black
-        btnVerifyNumber.Font = New Font("Segoe UI Variable Display", 12.75F, FontStyle.Bold, GraphicsUnit.Point)
+        btnVerifyNumber.Font = New Font("Segoe UI Variable Small", 8.25F, FontStyle.Regular, GraphicsUnit.Point)
         btnVerifyNumber.ForeColor = Color.LimeGreen
         btnVerifyNumber.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnVerifyNumber.Location = New Point(11, 323)
+        btnVerifyNumber.Location = New Point(11, 293)
         btnVerifyNumber.Name = "btnVerifyNumber"
-        btnVerifyNumber.Size = New Size(190, 37)
+        btnVerifyNumber.Size = New Size(190, 40)
         btnVerifyNumber.TabIndex = 10
         btnVerifyNumber.Text = "Number Validation"
         ToolTip1.SetToolTip(btnVerifyNumber, "Phone number validation tool")
@@ -383,10 +377,10 @@ Partial Class frmMain
         btnMailbaitSubmit.BackColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
         btnMailbaitSubmit.Cursor = Cursors.Hand
         btnMailbaitSubmit.FlatAppearance.BorderColor = Color.Black
-        btnMailbaitSubmit.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Bold, GraphicsUnit.Point)
+        btnMailbaitSubmit.Font = New Font("Segoe UI Variable Small", 8.25F, FontStyle.Regular, GraphicsUnit.Point)
         btnMailbaitSubmit.ForeColor = SystemColors.Info
         btnMailbaitSubmit.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnMailbaitSubmit.Location = New Point(11, 210)
+        btnMailbaitSubmit.Location = New Point(11, 185)
         btnMailbaitSubmit.Name = "btnMailbaitSubmit"
         btnMailbaitSubmit.Size = New Size(190, 37)
         btnMailbaitSubmit.TabIndex = 9
@@ -399,7 +393,7 @@ Partial Class frmMain
         Label1.AutoSize = True
         Label1.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         Label1.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        Label1.Location = New Point(235, 322)
+        Label1.Location = New Point(235, 349)
         Label1.Name = "Label1"
         Label1.Size = New Size(293, 21)
         Label1.TabIndex = 22
@@ -412,7 +406,7 @@ Partial Class frmMain
         txtOpenTabs.BorderStyle = BorderStyle.None
         txtOpenTabs.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         txtOpenTabs.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        txtOpenTabs.Location = New Point(554, 322)
+        txtOpenTabs.Location = New Point(554, 349)
         txtOpenTabs.Name = "txtOpenTabs"
         txtOpenTabs.PlaceholderText = "50"
         txtOpenTabs.Size = New Size(40, 22)
@@ -424,12 +418,12 @@ Partial Class frmMain
         btnEmailValidation.BackColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
         btnEmailValidation.Cursor = Cursors.Hand
         btnEmailValidation.FlatAppearance.BorderColor = Color.Black
-        btnEmailValidation.Font = New Font("Segoe UI Variable Display", 12.75F, FontStyle.Bold, GraphicsUnit.Point)
+        btnEmailValidation.Font = New Font("Segoe UI Variable Small", 8.25F, FontStyle.Regular, GraphicsUnit.Point)
         btnEmailValidation.ForeColor = Color.LimeGreen
         btnEmailValidation.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnEmailValidation.Location = New Point(11, 360)
+        btnEmailValidation.Location = New Point(11, 334)
         btnEmailValidation.Name = "btnEmailValidation"
-        btnEmailValidation.Size = New Size(190, 37)
+        btnEmailValidation.Size = New Size(190, 40)
         btnEmailValidation.TabIndex = 101
         btnEmailValidation.Text = "Email Validation"
         ToolTip1.SetToolTip(btnEmailValidation, "Phone number validation tool")
@@ -439,10 +433,11 @@ Partial Class frmMain
         ' 
         lblRegion.AutoSize = True
         lblRegion.BackColor = Color.FromArgb(CByte(18), CByte(18), CByte(18))
+        lblRegion.Font = New Font("Segoe UI Variable Display", 9F, FontStyle.Regular, GraphicsUnit.Point)
         lblRegion.ForeColor = SystemColors.ControlLightLight
-        lblRegion.Location = New Point(12, 568)
+        lblRegion.Location = New Point(12, 625)
         lblRegion.Name = "lblRegion"
-        lblRegion.Size = New Size(98, 15)
+        lblRegion.Size = New Size(97, 16)
         lblRegion.TabIndex = 104
         lblRegion.Text = "Region: waiting..."
         lblRegion.TextAlign = Drawing.ContentAlignment.MiddleCenter
@@ -453,11 +448,11 @@ Partial Class frmMain
         Label3.AutoSize = True
         Label3.BackColor = Color.FromArgb(CByte(18), CByte(18), CByte(18))
         Label3.Cursor = Cursors.Hand
-        Label3.Font = New Font("Segoe UI Variable Display Semib", 9F, FontStyle.Bold, GraphicsUnit.Point)
+        Label3.Font = New Font("Segoe UI Variable Display Semib", 9.75F, FontStyle.Bold, GraphicsUnit.Point)
         Label3.ForeColor = SystemColors.ControlLightLight
-        Label3.Location = New Point(12, 529)
+        Label3.Location = New Point(12, 521)
         Label3.Name = "Label3"
-        Label3.Size = New Size(137, 16)
+        Label3.Size = New Size(151, 17)
         Label3.TabIndex = 110
         Label3.Text = "YOUR IP INFORMATION:"
         Label3.TextAlign = Drawing.ContentAlignment.MiddleCenter
@@ -469,14 +464,14 @@ Partial Class frmMain
         btnMailman.Cursor = Cursors.Hand
         btnMailman.FlatAppearance.BorderColor = Color.Black
         btnMailman.Font = New Font("Segoe UI Variable Display", 11.25F, FontStyle.Bold, GraphicsUnit.Point)
-        btnMailman.ForeColor = SystemColors.Info
+        btnMailman.ForeColor = Color.Red
         btnMailman.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnMailman.Location = New Point(11, 247)
+        btnMailman.Location = New Point(11, 223)
         btnMailman.Name = "btnMailman"
-        btnMailman.Size = New Size(190, 37)
+        btnMailman.Size = New Size(190, 67)
         btnMailman.TabIndex = 111
         btnMailman.Text = "MAILMAN Campaign"
-        ToolTip1.SetToolTip(btnMailman, "Under Construction")
+        ToolTip1.SetToolTip(btnMailman, "Hell Yeah Brother!")
         btnMailman.UseVisualStyleBackColor = False
         ' 
         ' btnStopAll
@@ -489,9 +484,9 @@ Partial Class frmMain
         btnStopAll.Font = New Font("Segoe UI Variable Display", 12.75F, FontStyle.Bold, GraphicsUnit.Point)
         btnStopAll.ForeColor = Color.White
         btnStopAll.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnStopAll.Location = New Point(11, 399)
+        btnStopAll.Location = New Point(11, 377)
         btnStopAll.Name = "btnStopAll"
-        btnStopAll.Size = New Size(190, 37)
+        btnStopAll.Size = New Size(190, 61)
         btnStopAll.TabIndex = 112
         btnStopAll.Text = "E-STOP"
         ToolTip1.SetToolTip(btnStopAll, "Stop ALL Attacks")
@@ -502,11 +497,11 @@ Partial Class frmMain
         Label5.AutoSize = True
         Label5.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         Label5.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        Label5.Location = New Point(234, 357)
+        Label5.Location = New Point(235, 468)
         Label5.Name = "Label5"
-        Label5.Size = New Size(249, 21)
+        Label5.Size = New Size(157, 21)
         Label5.TabIndex = 115
-        Label5.Text = "MAILMAN Submissions Complete:"
+        Label5.Text = "MAILMAN Complete:"
         ToolTip1.SetToolTip(Label5, "MAILMAN Campaign Stats")
         ' 
         ' Label7
@@ -514,7 +509,7 @@ Partial Class frmMain
         Label7.AutoSize = True
         Label7.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         Label7.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        Label7.Location = New Point(560, 357)
+        Label7.Location = New Point(458, 468)
         Label7.Name = "Label7"
         Label7.Size = New Size(53, 21)
         Label7.TabIndex = 118
@@ -527,7 +522,7 @@ Partial Class frmMain
         txtSuccessful.BorderStyle = BorderStyle.None
         txtSuccessful.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         txtSuccessful.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        txtSuccessful.Location = New Point(491, 357)
+        txtSuccessful.Location = New Point(389, 468)
         txtSuccessful.Name = "txtSuccessful"
         txtSuccessful.PlaceholderText = "00000"
         txtSuccessful.Size = New Size(64, 22)
@@ -541,7 +536,7 @@ Partial Class frmMain
         txtFailed.BorderStyle = BorderStyle.None
         txtFailed.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         txtFailed.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        txtFailed.Location = New Point(612, 357)
+        txtFailed.Location = New Point(510, 468)
         txtFailed.Name = "txtFailed"
         txtFailed.PlaceholderText = "00000"
         txtFailed.Size = New Size(62, 22)
@@ -557,11 +552,11 @@ Partial Class frmMain
         btnChangeName.FlatAppearance.BorderColor = Color.Black
         btnChangeName.Font = New Font("Segoe UI Variable Display Light", 11.25F, FontStyle.Regular, GraphicsUnit.Point)
         btnChangeName.ForeColor = SystemColors.ControlLightLight
-        btnChangeName.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnChangeName.Location = New Point(1071, 591)
+        btnChangeName.Location = New Point(1070, 659)
         btnChangeName.Name = "btnChangeName"
         btnChangeName.Size = New Size(25, 25)
         btnChangeName.TabIndex = 121
+        btnChangeName.Text = "M"
         ToolTip1.SetToolTip(btnChangeName, "Change Machine Name on next startup to a random value")
         btnChangeName.UseVisualStyleBackColor = False
         ' 
@@ -571,7 +566,7 @@ Partial Class frmMain
         TextBox1.CharacterCasing = CharacterCasing.Upper
         TextBox1.Font = New Font("Segoe UI Variable Display", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
         TextBox1.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        TextBox1.Location = New Point(902, 591)
+        TextBox1.Location = New Point(901, 659)
         TextBox1.MaxLength = 30
         TextBox1.Name = "TextBox1"
         TextBox1.PlaceholderText = "REFERENCE:"
@@ -579,29 +574,12 @@ Partial Class frmMain
         TextBox1.TabIndex = 122
         ToolTip1.SetToolTip(TextBox1, "Add reference info here. It is volitile memory.")
         ' 
-        ' btnAutoDialer
-        ' 
-        btnAutoDialer.BackColor = Color.FromArgb(CByte(64), CByte(64), CByte(64))
-        btnAutoDialer.BackgroundImageLayout = ImageLayout.Center
-        btnAutoDialer.Cursor = Cursors.Hand
-        btnAutoDialer.FlatAppearance.BorderColor = Color.Black
-        btnAutoDialer.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Bold, GraphicsUnit.Point)
-        btnAutoDialer.ForeColor = SystemColors.Info
-        btnAutoDialer.ImageAlign = Drawing.ContentAlignment.MiddleLeft
-        btnAutoDialer.Location = New Point(11, 285)
-        btnAutoDialer.Name = "btnAutoDialer"
-        btnAutoDialer.Size = New Size(190, 37)
-        btnAutoDialer.TabIndex = 123
-        btnAutoDialer.Text = "Auto Dialer"
-        ToolTip1.SetToolTip(btnAutoDialer, "This is for the auto-dialer function,not yet implimented as of March 2025" & vbCrLf & vbCrLf & "UNDER CONSTRUCTION PLACEHOLDER")
-        btnAutoDialer.UseVisualStyleBackColor = False
-        ' 
         ' lblConcurrentMailman
         ' 
         lblConcurrentMailman.AutoSize = True
         lblConcurrentMailman.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         lblConcurrentMailman.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        lblConcurrentMailman.Location = New Point(235, 395)
+        lblConcurrentMailman.Location = New Point(235, 386)
         lblConcurrentMailman.Name = "lblConcurrentMailman"
         lblConcurrentMailman.Size = New Size(250, 21)
         lblConcurrentMailman.TabIndex = 127
@@ -610,43 +588,110 @@ Partial Class frmMain
         ' 
         ' tbConcurrent
         ' 
-        tbConcurrent.Location = New Point(488, 392)
+        tbConcurrent.Location = New Point(488, 384)
         tbConcurrent.Minimum = 1
         tbConcurrent.Name = "tbConcurrent"
         tbConcurrent.Size = New Size(205, 45)
         tbConcurrent.TabIndex = 128
         ToolTip1.SetToolTip(tbConcurrent, "This is the number of concurrent MAILMAN submission streams are sent")
-        tbConcurrent.Value = 1
+        tbConcurrent.Value = 5
         ' 
         ' tbThrottle
         ' 
-        tbThrottle.Location = New Point(521, 429)
+        tbThrottle.Location = New Point(521, 425)
         tbThrottle.Maximum = 20
         tbThrottle.Minimum = 1
         tbThrottle.Name = "tbThrottle"
         tbThrottle.Size = New Size(172, 45)
         tbThrottle.TabIndex = 130
         ToolTip1.SetToolTip(tbThrottle, resources.GetString("tbThrottle.ToolTip"))
-        tbThrottle.Value = 1
+        tbThrottle.Value = 10
         ' 
         ' Label6
         ' 
         Label6.AutoSize = True
         Label6.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         Label6.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        Label6.Location = New Point(235, 432)
+        Label6.Location = New Point(235, 427)
         Label6.Name = "Label6"
         Label6.Size = New Size(287, 21)
         Label6.TabIndex = 129
         Label6.Text = "Delay Between Submissions Per Stream:"
         ToolTip1.SetToolTip(Label6, "MAILMAN Campaign")
         ' 
+        ' Label8
+        ' 
+        Label8.AutoSize = True
+        Label8.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
+        Label8.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
+        Label8.Location = New Point(578, 468)
+        Label8.Name = "Label8"
+        Label8.Size = New Size(88, 21)
+        Label8.TabIndex = 137
+        Label8.Text = "Confirmed:"
+        ToolTip1.SetToolTip(Label8, "MAILMAN Campaign Stats")
+        ' 
+        ' txtConfirmed
+        ' 
+        txtConfirmed.BackColor = Color.FromArgb(CByte(30), CByte(30), CByte(30))
+        txtConfirmed.BorderStyle = BorderStyle.None
+        txtConfirmed.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
+        txtConfirmed.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
+        txtConfirmed.Location = New Point(640, 468)
+        txtConfirmed.Name = "txtConfirmed"
+        txtConfirmed.PlaceholderText = "00000"
+        txtConfirmed.Size = New Size(62, 22)
+        txtConfirmed.TabIndex = 138
+        txtConfirmed.TextAlign = HorizontalAlignment.Center
+        ToolTip1.SetToolTip(txtConfirmed, "MAILMAN Campaign Stats")
+        ' 
+        ' txtOutgoingMessages
+        ' 
+        txtOutgoingMessages.BackColor = Color.FromArgb(CByte(30), CByte(30), CByte(30))
+        txtOutgoingMessages.BorderStyle = BorderStyle.None
+        txtOutgoingMessages.Font = New Font("Segoe UI Variable Display Semib", 9.75F, FontStyle.Bold, GraphicsUnit.Point)
+        txtOutgoingMessages.ForeColor = Color.LimeGreen
+        txtOutgoingMessages.Location = New Point(235, 501)
+        txtOutgoingMessages.Name = "txtOutgoingMessages"
+        txtOutgoingMessages.ReadOnly = True
+        txtOutgoingMessages.ScrollBars = RichTextBoxScrollBars.None
+        txtOutgoingMessages.Size = New Size(432, 152)
+        txtOutgoingMessages.TabIndex = 135
+        txtOutgoingMessages.Text = ""
+        ToolTip1.SetToolTip(txtOutgoingMessages, "Shows every submission attempt. May include successful and failed send attempts.")
+        ' 
+        ' txtConfirm
+        ' 
+        txtConfirm.BackColor = Color.FromArgb(CByte(30), CByte(30), CByte(30))
+        txtConfirm.BorderStyle = BorderStyle.None
+        txtConfirm.Font = New Font("Segoe UI Variable Display Semib", 9.75F, FontStyle.Bold, GraphicsUnit.Point)
+        txtConfirm.ForeColor = Color.Red
+        txtConfirm.Location = New Point(673, 501)
+        txtConfirm.Name = "txtConfirm"
+        txtConfirm.ScrollBars = RichTextBoxScrollBars.None
+        txtConfirm.Size = New Size(420, 152)
+        txtConfirm.TabIndex = 136
+        txtConfirm.Text = ""
+        ToolTip1.SetToolTip(txtConfirm, "Displays only verified successful submissions. Pulled from confirmed HTML responses.")
+        ' 
+        ' cbHumanMode
+        ' 
+        cbHumanMode.AutoSize = True
+        cbHumanMode.Checked = True
+        cbHumanMode.CheckState = CheckState.Checked
+        cbHumanMode.Location = New Point(166, 668)
+        cbHumanMode.Name = "cbHumanMode"
+        cbHumanMode.Size = New Size(15, 14)
+        cbHumanMode.TabIndex = 139
+        ToolTip1.SetToolTip(cbHumanMode, "Enables random delays and shuffled sending order to mimic natural human behavior. Helps avoid detection by spam filters.")
+        cbHumanMode.UseVisualStyleBackColor = True
+        ' 
         ' Label4
         ' 
         Label4.AutoSize = True
         Label4.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         Label4.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        Label4.Location = New Point(235, 245)
+        Label4.Location = New Point(235, 268)
         Label4.Name = "Label4"
         Label4.Size = New Size(189, 21)
         Label4.TabIndex = 103
@@ -656,10 +701,11 @@ Partial Class frmMain
         ' 
         lblProxy.AutoSize = True
         lblProxy.BackColor = Color.FromArgb(CByte(18), CByte(18), CByte(18))
+        lblProxy.Font = New Font("Segoe UI Variable Display", 9F, FontStyle.Regular, GraphicsUnit.Point)
         lblProxy.ForeColor = SystemColors.ControlLightLight
-        lblProxy.Location = New Point(12, 587)
+        lblProxy.Location = New Point(12, 609)
         lblProxy.Name = "lblProxy"
-        lblProxy.Size = New Size(91, 15)
+        lblProxy.Size = New Size(89, 16)
         lblProxy.TabIndex = 107
         lblProxy.Text = "Proxy: waiting..."
         lblProxy.TextAlign = Drawing.ContentAlignment.MiddleCenter
@@ -668,10 +714,11 @@ Partial Class frmMain
         ' 
         lblCountryCode.AutoSize = True
         lblCountryCode.BackColor = Color.FromArgb(CByte(18), CByte(18), CByte(18))
+        lblCountryCode.Font = New Font("Segoe UI Variable Display", 9F, FontStyle.Regular, GraphicsUnit.Point)
         lblCountryCode.ForeColor = SystemColors.ControlLightLight
-        lblCountryCode.Location = New Point(12, 606)
+        lblCountryCode.Location = New Point(12, 641)
         lblCountryCode.Name = "lblCountryCode"
-        lblCountryCode.Size = New Size(104, 15)
+        lblCountryCode.Size = New Size(103, 16)
         lblCountryCode.TabIndex = 108
         lblCountryCode.Text = "Country: waiting..."
         lblCountryCode.TextAlign = Drawing.ContentAlignment.MiddleCenter
@@ -680,10 +727,11 @@ Partial Class frmMain
         ' 
         lblVPN.AutoSize = True
         lblVPN.BackColor = Color.FromArgb(CByte(18), CByte(18), CByte(18))
+        lblVPN.Font = New Font("Segoe UI Variable Display", 9F, FontStyle.Regular, GraphicsUnit.Point)
         lblVPN.ForeColor = SystemColors.ControlLightLight
-        lblVPN.Location = New Point(12, 550)
+        lblVPN.Location = New Point(12, 592)
         lblVPN.Name = "lblVPN"
-        lblVPN.Size = New Size(84, 15)
+        lblVPN.Size = New Size(83, 16)
         lblVPN.TabIndex = 109
         lblVPN.Text = "VPN: waiting..."
         lblVPN.TextAlign = Drawing.ContentAlignment.MiddleCenter
@@ -697,24 +745,25 @@ Partial Class frmMain
         ' 
         txtVerificationResults.BackColor = Color.FromArgb(CByte(30), CByte(30), CByte(30))
         txtVerificationResults.BorderStyle = BorderStyle.None
-        txtVerificationResults.Font = New Font("Segoe UI Variable Display", 9F, FontStyle.Regular, GraphicsUnit.Point)
+        txtVerificationResults.Font = New Font("Segoe UI Variable Display", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
         txtVerificationResults.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        txtVerificationResults.Location = New Point(729, 138)
+        txtVerificationResults.Location = New Point(729, 112)
         txtVerificationResults.Name = "txtVerificationResults"
         txtVerificationResults.ReadOnly = True
         txtVerificationResults.ScrollBars = RichTextBoxScrollBars.None
-        txtVerificationResults.Size = New Size(364, 357)
+        txtVerificationResults.Size = New Size(364, 403)
         txtVerificationResults.TabIndex = 119
         txtVerificationResults.Text = resources.GetString("txtVerificationResults.Text")
         ' 
         ' lblTimeElapsed
         ' 
         lblTimeElapsed.AutoSize = True
-        lblTimeElapsed.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
-        lblTimeElapsed.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        lblTimeElapsed.Location = New Point(219, 598)
+        lblTimeElapsed.BackColor = Color.FromArgb(CByte(18), CByte(18), CByte(18))
+        lblTimeElapsed.Font = New Font("Segoe UI Variable Display Semib", 9.75F, FontStyle.Bold, GraphicsUnit.Point)
+        lblTimeElapsed.ForeColor = SystemColors.ControlLightLight
+        lblTimeElapsed.Location = New Point(69, 667)
         lblTimeElapsed.Name = "lblTimeElapsed"
-        lblTimeElapsed.Size = New Size(79, 21)
+        lblTimeElapsed.Size = New Size(63, 17)
         lblTimeElapsed.TabIndex = 124
         lblTimeElapsed.Text = "000:00:00"
         lblTimeElapsed.TextAlign = Drawing.ContentAlignment.MiddleCenter
@@ -727,28 +776,96 @@ Partial Class frmMain
         ' lblElapsed
         ' 
         lblElapsed.AutoSize = True
-        lblElapsed.Font = New Font("Segoe UI Variable Display", 8.25F, FontStyle.Regular, GraphicsUnit.Point)
-        lblElapsed.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        lblElapsed.Location = New Point(234, 588)
+        lblElapsed.BackColor = Color.FromArgb(CByte(18), CByte(18), CByte(18))
+        lblElapsed.Font = New Font("Segoe UI Variable Display Semib", 9.75F, FontStyle.Bold, GraphicsUnit.Point)
+        lblElapsed.ForeColor = SystemColors.ControlLightLight
+        lblElapsed.Location = New Point(12, 667)
         lblElapsed.Name = "lblElapsed"
-        lblElapsed.Size = New Size(49, 15)
+        lblElapsed.Size = New Size(60, 17)
         lblElapsed.TabIndex = 125
         lblElapsed.Text = "ELAPSED"
         lblElapsed.TextAlign = Drawing.ContentAlignment.MiddleCenter
+        ' 
+        ' lblYourIP
+        ' 
+        lblYourIP.AutoSize = True
+        lblYourIP.BackColor = Color.FromArgb(CByte(18), CByte(18), CByte(18))
+        lblYourIP.Font = New Font("Segoe UI Variable Display", 9F, FontStyle.Regular, GraphicsUnit.Point)
+        lblYourIP.ForeColor = SystemColors.ControlLightLight
+        lblYourIP.Location = New Point(12, 541)
+        lblYourIP.Name = "lblYourIP"
+        lblYourIP.Size = New Size(53, 16)
+        lblYourIP.TabIndex = 131
+        lblYourIP.Text = "Your IP..."
+        lblYourIP.TextAlign = Drawing.ContentAlignment.MiddleCenter
+        ' 
+        ' lblISP
+        ' 
+        lblISP.AutoSize = True
+        lblISP.BackColor = Color.FromArgb(CByte(18), CByte(18), CByte(18))
+        lblISP.Font = New Font("Segoe UI Variable Display", 9F, FontStyle.Regular, GraphicsUnit.Point)
+        lblISP.ForeColor = SystemColors.ControlLightLight
+        lblISP.Location = New Point(12, 558)
+        lblISP.Name = "lblISP"
+        lblISP.Size = New Size(60, 16)
+        lblISP.TabIndex = 133
+        lblISP.Text = "Your ISP..."
+        lblISP.TextAlign = Drawing.ContentAlignment.MiddleCenter
+        ' 
+        ' lblVPNTrust
+        ' 
+        lblVPNTrust.AutoSize = True
+        lblVPNTrust.BackColor = Color.FromArgb(CByte(18), CByte(18), CByte(18))
+        lblVPNTrust.Font = New Font("Segoe UI Variable Display", 9F, FontStyle.Regular, GraphicsUnit.Point)
+        lblVPNTrust.ForeColor = SystemColors.ControlLightLight
+        lblVPNTrust.Location = New Point(12, 575)
+        lblVPNTrust.Name = "lblVPNTrust"
+        lblVPNTrust.Size = New Size(72, 16)
+        lblVPNTrust.TabIndex = 134
+        lblVPNTrust.Text = "Likely VPN..."
+        lblVPNTrust.TextAlign = Drawing.ContentAlignment.MiddleCenter
+        ' 
+        ' tmrAlertFlash
+        ' 
+        tmrAlertFlash.Enabled = True
+        tmrAlertFlash.Interval = 750
+        ' 
+        ' StartupTimer
+        ' 
+        StartupTimer.Enabled = True
+        StartupTimer.Interval = 5000
+        ' 
+        ' cbBusinessHours
+        ' 
+        cbBusinessHours.AutoSize = True
+        cbBusinessHours.Location = New Point(187, 668)
+        cbBusinessHours.Name = "cbBusinessHours"
+        cbBusinessHours.Size = New Size(15, 14)
+        cbBusinessHours.TabIndex = 140
+        ToolTip1.SetToolTip(cbBusinessHours, "Slows down sending after 10 PM and before 6 AM to mimic real user behavior. Helps avoid spam filters by limiting activity during suspicious hours.")
+        cbBusinessHours.UseVisualStyleBackColor = True
         ' 
         ' frmMain
         ' 
         AutoScaleDimensions = New SizeF(7F, 15F)
         AutoScaleMode = AutoScaleMode.Font
         BackColor = Color.FromArgb(CByte(30), CByte(30), CByte(30))
-        ClientSize = New Size(1108, 630)
+        ClientSize = New Size(1108, 696)
+        Controls.Add(cbBusinessHours)
+        Controls.Add(cbHumanMode)
+        Controls.Add(txtConfirmed)
+        Controls.Add(Label8)
+        Controls.Add(txtConfirm)
+        Controls.Add(txtOutgoingMessages)
+        Controls.Add(lblVPNTrust)
+        Controls.Add(lblISP)
+        Controls.Add(lblYourIP)
         Controls.Add(tbThrottle)
         Controls.Add(Label6)
         Controls.Add(tbConcurrent)
         Controls.Add(lblConcurrentMailman)
         Controls.Add(lblElapsed)
         Controls.Add(lblTimeElapsed)
-        Controls.Add(btnAutoDialer)
         Controls.Add(TextBox1)
         Controls.Add(btnChangeName)
         Controls.Add(txtVerificationResults)
@@ -765,7 +882,6 @@ Partial Class frmMain
         Controls.Add(lblCountryCode)
         Controls.Add(lblProxy)
         Controls.Add(btnEmailValidation)
-        Controls.Add(txtOutgoingMessages)
         Controls.Add(btnClose)
         Controls.Add(Label1)
         Controls.Add(btnEmailToSMS)
@@ -791,7 +907,6 @@ Partial Class frmMain
         Icon = CType(resources.GetObject("$this.Icon"), Icon)
         MaximizeBox = False
         Name = "frmMain"
-        Opacity = 0.99R
         StartPosition = FormStartPosition.CenterScreen
         SplitContainer1.Panel1.ResumeLayout(False)
         SplitContainer1.Panel1.PerformLayout()
@@ -819,7 +934,6 @@ Partial Class frmMain
     Friend WithEvents btnClose As Button
     Friend WithEvents btnEmailToSMS As Button
     Friend WithEvents dbSelectCellProvider As ComboBox
-    Friend WithEvents txtOutgoingMessages As TextBox
     Friend WithEvents btnSettings As Button
     Friend WithEvents PictureBox1 As PictureBox
     Friend WithEvents LinkLabel1 As LinkLabel
@@ -846,7 +960,6 @@ Partial Class frmMain
     Friend WithEvents txtVerificationResults As RichTextBox
     Friend WithEvents btnChangeName As Button
     Friend WithEvents TextBox1 As TextBox
-    Friend WithEvents btnAutoDialer As Button
     Friend WithEvents lblTimeElapsed As Label
     Friend WithEvents TmrTimeElapsed As Timer
     Friend WithEvents lblElapsed As Label
@@ -854,4 +967,15 @@ Partial Class frmMain
     Friend WithEvents tbConcurrent As TrackBar
     Friend WithEvents tbThrottle As TrackBar
     Friend WithEvents Label6 As Label
+    Friend WithEvents lblYourIP As Label
+    Friend WithEvents lblISP As Label
+    Friend WithEvents lblVPNTrust As Label
+    Friend WithEvents tmrAlertFlash As Timer
+    Friend WithEvents StartupTimer As Timer
+    Friend WithEvents txtOutgoingMessages As RichTextBox
+    Friend WithEvents txtConfirm As RichTextBox
+    Friend WithEvents Label8 As Label
+    Friend WithEvents txtConfirmed As TextBox
+    Friend WithEvents cbHumanMode As CheckBox
+    Friend WithEvents cbBusinessHours As CheckBox
 End Class

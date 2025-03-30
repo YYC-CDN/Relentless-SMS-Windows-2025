@@ -3,12 +3,17 @@
 
 Imports System.Configuration
 Imports System.IO
+Imports System.Net.Http
 Imports System.Security.Cryptography
 Imports System.Text
+Imports System.Text.RegularExpressions
+Imports HtmlAgilityPack
+Imports System.Threading.Tasks
+
 
 Module x
 
-#Region "============================== STARTUP & FOLDER CREATION ===================================="
+#Region "============================== STARTUP & PATH CREATION ===================================="
 
     ' Base directory for all files
     Public ReadOnly BasePath As String = "C:\RelentlessSMS"
@@ -234,9 +239,9 @@ Module x
                 writer.WriteLine("Aerial Communications, @sms.aerialink.net")
                 writer.WriteLine("Alaska Communications, @msg.acsalaska.com")
                 writer.WriteLine("Alltel, @message.alltel.com")
+                writer.WriteLine("Aliant, @sms.wirefree.informe.ca")
+                writer.WriteLine("América Móvil, @sms.americamovil.com")
                 writer.WriteLine("Appalachian Wireless, @sms.appwireless.com")
-                writer.WriteLine("Bell Canada, @txt.bell.ca")
-                writer.WriteLine("Bell Mobility, @txt.bell.ca")
                 writer.WriteLine("Bluegrass Cellular, @sms.bluecell.com")
                 writer.WriteLine("Boost Mobile, @sms.myboostmobile.com")
                 writer.WriteLine("Cellcom, @cellcom.quiktxt.com")
@@ -244,17 +249,19 @@ Module x
                 writer.WriteLine("Centennial Wireless, @cwemail.com")
                 writer.WriteLine("Cincinnati Bell, @gocbw.com")
                 writer.WriteLine("Cingular, @cingularme.com")
+                writer.WriteLine("ClearTalk, @sms.cleartalk.us")
+                writer.WriteLine("Consumer Cellular, @mailmymobile.net")
                 writer.WriteLine("Cricket Wireless, @mms.cricketwireless.net")
                 writer.WriteLine("C-Spire, @cspire1.com")
+                writer.WriteLine("Eastlink, @sms.eastlink.ca")
                 writer.WriteLine("Fido, @fido.ca")
                 writer.WriteLine("Fractal, @fractal.net")
                 writer.WriteLine("Freedom Mobile, @txt.freedommobile.ca")
                 writer.WriteLine("GCI Wireless, @mobile.gci.net")
-                writer.WriteLine("Halo Wireless, @halocellular.com")
+                writer.WriteLine("Google Fi, @msg.fi.google.com")
                 writer.WriteLine("Koodo Mobile, @msg.koodomobile.com")
                 writer.WriteLine("MetroPCS, @mymetropcs.com")
                 writer.WriteLine("Mint Mobile, @mailmymobile.net")
-                writer.WriteLine("MTPCSLLC Cellular One, @mobile.celloneusa.com")
                 writer.WriteLine("MTS Mobility, @text.mtsmobility.com")
                 writer.WriteLine("NBTel, @wirefree.informe.ca")
                 writer.WriteLine("Nex-Tech Wireless, @sms.nextechwireless.com")
@@ -262,6 +269,7 @@ Module x
                 writer.WriteLine("PageNet Canada, @pagegate.pagenet.ca")
                 writer.WriteLine("Pioneer Cellular, @zsend.com")
                 writer.WriteLine("Qwest, @qwestmp.com")
+                writer.WriteLine("Republic Wireless, @text.republicwireless.com")
                 writer.WriteLine("Rogers Wireless, @pcs.rogers.com")
                 writer.WriteLine("SaskTel Mobility, @sms.sasktel.com")
                 writer.WriteLine("Spectrum Mobile, @vtext.com")
@@ -602,6 +610,7 @@ Module x
             MessageBox.Show("Error scheduling device name change: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+
 #End Region
 
 #Region "============================== ELAPSED TIMER ============================"
@@ -609,39 +618,41 @@ Module x
     ' Strted this on 03/22/25
     ' ✅ Start the timer
     Public Sub StartElapsedTimer(passedLabel As Label)
-            elapsedSeconds = 0
-            lblTimeElapsedRef = passedLabel
-            If lblTimeElapsedRef IsNot Nothing Then
-                lblTimeElapsedRef.Text = "000:00:00"
-            End If
+        elapsedSeconds = 0
+        lblTimeElapsedRef = passedLabel
+        If lblTimeElapsedRef IsNot Nothing Then
+            lblTimeElapsedRef.Text = "000:00:00"
+        End If
+        TmrTimeElapsed.Interval = 1000 ' 1 second
+        TmrTimeElapsed.Start()
+    End Sub
 
-            TmrTimeElapsed.Interval = 1000 ' 1 second
-            TmrTimeElapsed.Start()
-        End Sub
+    ' ✅ Stop the timer
+    Public Sub StopElapsedTimer()
+        TmrTimeElapsed.Stop()
+    End Sub
 
-        ' ✅ Stop the timer
-        Public Sub StopElapsedTimer()
-            TmrTimeElapsed.Stop()
-        End Sub
+    ' ✅ Reset without starting
+    Public Sub ResetElapsedTimer()
+        elapsedSeconds = 0
+        If lblTimeElapsedRef IsNot Nothing Then
+            lblTimeElapsedRef.Text = "000:00:00"
+        End If
+    End Sub
 
-        ' ✅ Reset without starting
-        Public Sub ResetElapsedTimer()
-            elapsedSeconds = 0
-            If lblTimeElapsedRef IsNot Nothing Then
-                lblTimeElapsedRef.Text = "000:00:00"
-            End If
-        End Sub
+    ' ✅ Tick event: runs every second
+    Private Sub TmrTimeElapsed_Tick(sender As Object, e As EventArgs) Handles TmrTimeElapsed.Tick
+        elapsedSeconds += 1
+        If lblTimeElapsedRef IsNot Nothing Then
+            lblTimeElapsedRef.Text = TimeSpan.FromSeconds(elapsedSeconds).ToString("hh\:mm\:ss")
+        End If
+    End Sub
 
-        ' ✅ Tick event: runs every second
-        Private Sub TmrTimeElapsed_Tick(sender As Object, e As EventArgs) Handles TmrTimeElapsed.Tick
-            elapsedSeconds += 1
-            If lblTimeElapsedRef IsNot Nothing Then
-                lblTimeElapsedRef.Text = TimeSpan.FromSeconds(elapsedSeconds).ToString("hh\:mm\:ss")
-            End If
-        End Sub
+
 
 #End Region
 
+#Region "============================== CLEAN TARGET HISTORY ============================"
 
     Public Sub CleanTargetHistory()
         Dim path As String = x.TargetHistoryPath
@@ -662,6 +673,117 @@ Module x
 
         File.WriteAllLines(path, cleanedLines.Distinct().ToArray())
     End Sub
+#End Region
+
+#Region "====================== MAILMAN PROVIDER DISCOVERY ======================"
+
+    '03/23/25 Added
+
+    Public Async Function DiscoverMailmanProvidersAsync(shodanKey As String, zoomeyeKey As String, securitytrailsKey As String, serpapiKey As String, outputPath As String, logForm As frmScraperConsole) As Task
+        Dim allUrls As New HashSet(Of String)
+        Dim httpClient As New HttpClient()
+
+        logForm.AppendLog("🔍 Starting Shodan scrape...")
+        Dim shodanUrls = Await GetShodanProvidersAsync(shodanKey, httpClient)
+        logForm.AppendLog($"📦 Shodan results: {shodanUrls.Count}")
+
+        logForm.AppendLog("🔍 Starting Google Dorking scrape...")
+        Dim googleUrls = Await GetGoogleDorkingProvidersAsync(serpapiKey, httpClient)
+        logForm.AppendLog($"🔍 Google Dorking results: {googleUrls.Count}")
+
+        logForm.AppendLog("🔄 Extracting valid signup pages...")
+
+        For Each url In shodanUrls.Union(googleUrls)
+            For Each deepUrl In Await ExtractDeepSignupLinks(url, httpClient, logForm)
+                allUrls.Add(deepUrl)
+            Next
+        Next
+
+
+        IO.File.WriteAllLines(outputPath, allUrls)
+
+        logForm.AppendLog($"✅ Total valid signup pages: {allUrls.Count}")
+        logForm.AppendLog("✅ Output saved to: " & outputPath)
+    End Function
+
+    Private Async Function GetShodanProvidersAsync(apiKey As String, client As HttpClient) As Task(Of List(Of String))
+        Dim results As New List(Of String)
+        For page = 1 To 20
+            Try
+                Dim url = $"https://api.shodan.io/shodan/host/search?key={apiKey}&query=mailman/listinfo&page={page}"
+                Dim response = Await client.GetStringAsync(url)
+                Dim matches = Regex.Matches(response, "https?:\/\/[^""\s]+")
+                For Each match In matches
+                    If match.Value.Contains("mailman") Then results.Add(match.Value)
+                Next
+            Catch
+                Exit For
+            End Try
+        Next
+        Return results.Distinct().ToList()
+    End Function
+
+    Private Async Function GetGoogleDorkingProvidersAsync(apiKey As String, client As HttpClient) As Task(Of List(Of String))
+        Dim dorks = {
+        "inurl:""mailman/listinfo"" intitle:""mailing lists""",
+        "inurl:""/mailman/listinfo"" site:.edu",
+        "inurl:""/mailman/listinfo"" site:.org",
+        "inurl:""/mailman/listinfo"" site:.gov",
+        "inurl:""/mailman/listinfo"" site:.net"
+    }
+
+        Dim results As New List(Of String)
+        For Each dork In dorks
+            Try
+                Dim url = $"https://serpapi.com/search?engine=google&q={Uri.EscapeDataString(dork)}&api_key={apiKey}"
+                Dim json = Await client.GetStringAsync(url)
+                Dim matches = Regex.Matches(json, "https?:\/\/[^""\s]+")
+                For Each match In matches
+                    If match.Value.Contains("mailman/listinfo") Then results.Add(match.Value)
+                Next
+            Catch
+                ' Continue silently
+            End Try
+        Next
+        Return results.Distinct().ToList()
+    End Function
+
+    Private Async Function ExtractDeepSignupLinks(indexUrl As String, client As HttpClient, logForm As frmScraperConsole) As Task(Of List(Of String))
+        Dim validUrls As New List(Of String)
+        Try
+            logForm.AppendLog("🔎 Scanning: " & indexUrl)
+
+            Dim html = Await client.GetStringAsync(indexUrl)
+            Dim doc As New HtmlDocument()
+            doc.LoadHtml(html)
+
+            For Each link In doc.DocumentNode.SelectNodes("//a[@href]")
+                Dim href = link.GetAttributeValue("href", "")
+                If href.Contains("listinfo") AndAlso Not href.TrimEnd("/"c).EndsWith("listinfo") Then
+                    Dim full = New Uri(New Uri(indexUrl), href).ToString()
+                    validUrls.Add(full)
+                ElseIf href.Contains("subscribe") OrElse href.Contains("join") Then
+                    Dim full = New Uri(New Uri(indexUrl), href).ToString()
+                    validUrls.Add(full)
+                End If
+            Next
+
+            If validUrls.Count > 0 Then
+                logForm.AppendLog($"✅ Found {validUrls.Count} signup page(s) under {indexUrl}")
+            Else
+                logForm.AppendLog($"⚠ No valid signup links found at {indexUrl}")
+            End If
+
+        Catch ex As Exception
+            logForm.AppendLog($"❌ Error parsing {indexUrl}: {ex.Message}")
+        End Try
+
+        Return validUrls.Distinct().ToList()
+    End Function
+
+
+#End Region
+
 
 
 End Module

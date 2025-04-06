@@ -1,11 +1,11 @@
-# 📦 Relentless SMS Windows 2025 – Changelog
+#  Relentless SMS Windows 2025 – Changelog
 
-## 🔖 Starting Point: Version 032325-07
+##  Starting Point: Version 032325-07
 Baseline version with core Mailman scraping, concurrency handling, VPN enforcement, and GUI layout established.
 
 ---
 
-## ✅ 032325-08 to 032825-39
+##  032325-08 to 032825-39
 - Full VPN detection logic overhaul
 - Instant submission halt on VPN drop
 - Live field flash alert logic
@@ -16,7 +16,7 @@ Baseline version with core Mailman scraping, concurrency handling, VPN enforceme
 
 ---
 
-## ✅ 032925-01 to 032925-25
+##  032925-01 to 032925-25
 ### Mailman Submission Confirmation Revamp
 - `txtConfirm` logging introduced for verified submissions
 - `txtConfirmed` counter added
@@ -24,13 +24,13 @@ Baseline version with core Mailman scraping, concurrency handling, VPN enforceme
 - Added `confirmed_urls.txt` and `confirmed_html_log.txt` for persistent tracking
 - Dual-logging system (txtOutgoingMessages + txtConfirm)
 - ScrollToCaret behavior added to both RTBs
-- Refined “✅ Confirmed” feedback system
+- Refined “ Confirmed” feedback system
 - Tooltip support for various form fields
 - Live confirmation verification and post-delivery audit trail
 
 ---
 
-## ✅ 032925-26 to 032925-38
+##  032925-26 to 032925-38
 ### UI / Behavior Cleanup + Visual Consistency
 - GUI synchronization between success and confirmation outputs
 - E-STOP shutdown delay override (10s delay for post-log activity to finish)
@@ -40,7 +40,7 @@ Baseline version with core Mailman scraping, concurrency handling, VPN enforceme
 
 ---
 
-## ✅ 032925-39 to 032925-47
+##  032925-39 to 032925-47
 ### Human Simulation Mode Begins
 - Added `cbHumanMode` (enabled by default)
 - Randomized sending order across signup list
@@ -50,7 +50,7 @@ Baseline version with core Mailman scraping, concurrency handling, VPN enforceme
 
 ---
 
-## ✅ 032925-48 to 032925-55
+##  032925-48 to 032925-55
 ### Spam Evasion Tactics & Realistic Load Modeling
 - `cbBusinessHours` added (restricts activity 10PM–6AM)
 - Cooldown after every 25 submissions (30s–60s random pause)
@@ -63,4 +63,4 @@ Baseline version with core Mailman scraping, concurrency handling, VPN enforceme
 
 ---
 
-## 🚀 Current Stable Build: 032925-55
+##  Current Stable Build: 032925-55

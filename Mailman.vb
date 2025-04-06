@@ -11,6 +11,8 @@ Imports System.Net
 
 
 Public Class Mailman
+    Private Shared confirmedSet As New HashSet(Of String)
+    Private Shared rndGlobal As New Random()
     Private Shared confirmedUrls As New HashSet(Of String)()
 
     ' Shared timestamp for global throttle enforcement
@@ -26,8 +28,12 @@ Public Class Mailman
         End If
 
         Dim urls As List(Of String) = IO.File.ReadAllLines(signupUrlsPath).ToList()
+        If frmMain.cbHumanMode.Checked Then
+            Dim rndGlobal As New Random()
+            urls = urls.OrderBy(Function(x) rndGlobal.Next()).ToList()
+        End If
         Dim rnd As New Random()
-        urls = urls.OrderBy(Function(x) rnd.Next()).ToList()
+        urls = urls.OrderBy(Function(x) rndGlobal.Next()).ToList()
 
         Dim httpClient As New HttpClient()
         Dim currentIndex As Integer = 0
@@ -70,7 +76,6 @@ Public Class Mailman
         End If
     End Function
 
-    ' This function handles a single form submission and applies throttle
     Private Async Function SubmitToSignupAsync(url As String, targetEmail As String, httpClient As HttpClient, updateUI As Action(Of String, Boolean?), cancelToken As CancellationToken) As Task
         Try
             If cancelToken.IsCancellationRequested Then Return
@@ -96,47 +101,37 @@ Public Class Mailman
                 Return
             End If
 
-            ' Build the full submission URL
+            ' Build full submission URL
             Dim formUrl As String = If(action.StartsWith("http"), action, New Uri(New Uri(url), action).ToString())
             Dim tokenInput = form.SelectSingleNode(".//input[@name='sub_form_token']")
             Dim hiddenToken As String = If(tokenInput IsNot Nothing, tokenInput.GetAttributeValue("value", ""), "")
 
             Dim postData As New Dictionary(Of String, String) From {
-                {"email", targetEmail},
-                {"email-button", "Subscribe"}
-            }
+            {"email", targetEmail},
+            {"email-button", "Subscribe"}
+        }
 
             If Not String.IsNullOrEmpty(hiddenToken) Then
                 postData.Add("sub_form_token", hiddenToken)
             End If
 
             ' === GLOBAL THROTTLE ENFORCEMENT ===
-            ' tbThrottle.Value: 0 = 60s, 10 = 1s (linear scale)
             Dim sliderValue As Integer = frmMain.tbThrottle.Value
-            Dim delayMs As Integer = CInt(60000 - (sliderValue * 5900))
+            Dim delayMs As Integer = CInt(60000 - (sliderValue * 5990))
             Dim waitTime As Integer = 0
 
             SyncLock ThrottleLock
                 Dim now As DateTime = DateTime.UtcNow
                 Dim elapsed = (now - LastSubmissionTime).TotalMilliseconds
-
-                If elapsed < delayMs Then
-                    waitTime = CInt(delayMs - elapsed)
-                End If
+                If elapsed < delayMs Then waitTime = CInt(delayMs - elapsed)
             End SyncLock
 
-            ' Wait if we need to throttle this send
-            If waitTime > 0 Then
-                Await Task.Delay(waitTime, cancelToken)
-            End If
-
-
+            If waitTime > 0 Then Await Task.Delay(waitTime, cancelToken)
 
             ' === SEND FORM SUBMISSION ===
             Dim content As New FormUrlEncodedContent(postData)
             Dim postResponse As HttpResponseMessage = Await httpClient.PostAsync(formUrl, content, cancelToken)
             Dim postText As String = Await postResponse.Content.ReadAsStringAsync()
-
             Dim lowerText As String = postText.ToLower()
 
             ' === Confidence scoring ===
@@ -147,57 +142,42 @@ Public Class Mailman
             If lowerText.Contains("subscription request has been received") Then score += 3
             If lowerText.Contains("confirmation email has been sent") Then score += 3
             If lowerText.Contains("mailman") Then score += 1
+            If lowerText.Contains("confirmation") Then score += 1
+            If lowerText.Contains("email sent") Then score += 1
             If postResponse.StatusCode = HttpStatusCode.OK Then score += 2
 
-            Dim isConfirmed As Boolean = (score >= 5)
+            Dim isConfirmed As Boolean = (score >= 4)
             IO.File.AppendAllText("C:\RelentlessSMS\Mailman\confidence_log.txt", $"[{DateTime.Now}] {formUrl} | Score: {score}" & Environment.NewLine)
-
             x.LogApiResponse(formUrl, postText)
 
+            ' === Only confirmed go to txtConfirm ===
             If isConfirmed Then
                 frmMain.Invoke(Sub()
-                    Dim timestamp As String = DateTime.Now.ToString("HH:mm:ss")
-                    If frmMain.allowConfirmLogging Then
-                        frmMain.Invoke(Sub()
-                            frmMain.txtConfirm.AppendText($"{timestamp}: ✅ Confirmed: {formUrl}" & Environment.NewLine)
-                            Try
-                            frmMain.txtConfirmed.Text = (Integer.Parse(frmMain.txtConfirmed.Text) + 1).ToString()
-                            Catch ex As Exception
-                            frmMain.txtConfirmed.Text = "1"
-                            End Try
-                            frmMain.txtConfirm.SelectionStart = frmMain.txtConfirm.TextLength
-                            frmMain.txtConfirm.ScrollToCaret()
-                        End Sub)
-                    End If
-                End Sub)
+                                   Dim timestamp As String = DateTime.Now.ToString("HH:mm:ss")
+                                   If frmMain.allowConfirmLogging Then
+                                       frmMain.txtConfirm.AppendText(timestamp & ": ✅ Confirmed: " & formUrl & Environment.NewLine)
+
+                                       ' Safely increment confirmed count
+                                       Dim currentCount As Integer = 0
+                                       If Not Integer.TryParse(frmMain.txtConfirmed.Text.Trim(), currentCount) Then
+                                           currentCount = 0
+                                       End If
+                                       frmMain.txtConfirmed.Text = (currentCount + 1).ToString()
+
+                                       frmMain.txtConfirm.SelectionStart = frmMain.txtConfirm.TextLength
+                                       frmMain.txtConfirm.ScrollToCaret()
+                                   End If
+                               End Sub)
+
                 IO.File.AppendAllText("C:\RelentlessSMS\Mailman\confirmed_urls.txt", formUrl & Environment.NewLine)
-                IO.File.AppendAllText("C:\RelentlessSMS\Mailman\confirmed_html_log.txt", $"[{DateTime.Now}] {formUrl}" & Environment.NewLine & postText & Environment.NewLine & "---" & Environment.NewLine)
+                IO.File.AppendAllText("C:\RelentlessSMS\Mailman\confirmed_html_log.txt", "[" & DateTime.Now.ToString() & "] " & formUrl & Environment.NewLine & postText & Environment.NewLine & "---" & Environment.NewLine)
             End If
 
+            ' Always log outcome to OutgoingMessages, mark isSuccess as TRUE for ANY submission
+            updateUI("📤 Submitted to " & formUrl & " | Score=" & score.ToString(), True)
 
-            If isConfirmed Then
-                frmMain.Invoke(Sub()
-                    Dim timestamp As String = DateTime.Now.ToString("HH:mm:ss")
-                    If frmMain.allowConfirmLogging Then
-                        frmMain.Invoke(Sub()
-                            frmMain.txtConfirm.AppendText($"{timestamp}: ✅ Confirmed: {formUrl}{Environment.NewLine}")
-                            Try
-                            frmMain.txtConfirmed.Text = (Integer.Parse(frmMain.txtConfirmed.Text) + 1).ToString()
-                            Catch ex As Exception
-                            frmMain.txtConfirmed.Text = "1"
-                            End Try
-                            frmMain.txtConfirm.SelectionStart = frmMain.txtConfirm.TextLength
-                            frmMain.txtConfirm.ScrollToCaret()
-                        End Sub)
-                    End If
-                End Sub)
-                IO.File.AppendAllText("C:\RelentlessSMS\Mailman\confirmed_urls.txt", $"{formUrl}{Environment.NewLine}")
-                IO.File.AppendAllText("C:\RelentlessSMS\Mailman\confirmed_html_log.txt", $"[{DateTime.Now}] {formUrl}{Environment.NewLine}{postText}{Environment.NewLine}---{Environment.NewLine}")
-            End If
 
-            updateUI($"📤 Submitted to {formUrl}", True)
-
-            ' Update throttle timestamp AFTER successful send
+            ' === Update global throttle timestamp ===
             SyncLock ThrottleLock
                 LastSubmissionTime = DateTime.UtcNow
             End SyncLock
@@ -208,5 +188,7 @@ Public Class Mailman
             End If
         End Try
     End Function
+
+
 
 End Class

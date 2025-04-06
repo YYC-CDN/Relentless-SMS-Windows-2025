@@ -32,6 +32,8 @@ Partial Class frmSettings
         cbShowBrowser = New CheckBox()
         TabControl1 = New TabControl()
         TabPage1 = New TabPage()
+        txtTwilioSID = New TextBox()
+        btnTwilioSID = New Button()
         lblSerpAPI = New LinkLabel()
         lblSecurityTrails = New LinkLabel()
         lblZoomeye = New LinkLabel()
@@ -56,6 +58,8 @@ Partial Class frmSettings
         btnAPIcredit = New Button()
         lblIPQuality = New LinkLabel()
         btnIPQualityScore = New Button()
+        txtTwilioSecret = New TextBox()
+        btnTwilioSecret = New Button()
         TabControl1.SuspendLayout()
         TabPage1.SuspendLayout()
         SuspendLayout()
@@ -146,6 +150,10 @@ Partial Class frmSettings
         ' TabPage1
         ' 
         TabPage1.BackColor = Color.FromArgb(CByte(30), CByte(30), CByte(30))
+        TabPage1.Controls.Add(txtTwilioSecret)
+        TabPage1.Controls.Add(btnTwilioSecret)
+        TabPage1.Controls.Add(txtTwilioSID)
+        TabPage1.Controls.Add(btnTwilioSID)
         TabPage1.Controls.Add(lblSerpAPI)
         TabPage1.Controls.Add(lblSecurityTrails)
         TabPage1.Controls.Add(lblZoomeye)
@@ -179,6 +187,24 @@ Partial Class frmSettings
         TabPage1.Size = New Size(954, 398)
         TabPage1.TabIndex = 0
         TabPage1.Text = "Textbelt API"
+        ' 
+        ' txtTwilioSID
+        ' 
+        txtTwilioSID.Font = New Font("Verdana", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
+        txtTwilioSID.Location = New Point(246, 237)
+        txtTwilioSID.Name = "txtTwilioSID"
+        txtTwilioSID.Size = New Size(448, 23)
+        txtTwilioSID.TabIndex = 135
+        ' 
+        ' btnTwilioSID
+        ' 
+        btnTwilioSID.Font = New Font("Segoe UI Variable Display", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
+        btnTwilioSID.Location = New Point(701, 237)
+        btnTwilioSID.Name = "btnTwilioSID"
+        btnTwilioSID.Size = New Size(224, 21)
+        btnTwilioSID.TabIndex = 136
+        btnTwilioSID.Text = "Add TWILIO SID"
+        btnTwilioSID.UseVisualStyleBackColor = True
         ' 
         ' lblSerpAPI
         ' 
@@ -287,7 +313,7 @@ Partial Class frmSettings
         ' btnAddSMTP
         ' 
         btnAddSMTP.Font = New Font("Verdana", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
-        btnAddSMTP.Location = New Point(624, 281)
+        btnAddSMTP.Location = New Point(624, 316)
         btnAddSMTP.Name = "btnAddSMTP"
         btnAddSMTP.Size = New Size(145, 30)
         btnAddSMTP.TabIndex = 112
@@ -297,7 +323,7 @@ Partial Class frmSettings
         ' txtPort
         ' 
         txtPort.Font = New Font("Verdana", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
-        txtPort.Location = New Point(323, 284)
+        txtPort.Location = New Point(323, 319)
         txtPort.Name = "txtPort"
         txtPort.PlaceholderText = "587"
         txtPort.Size = New Size(58, 23)
@@ -308,7 +334,7 @@ Partial Class frmSettings
         Label9.AutoSize = True
         Label9.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         Label9.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        Label9.Location = New Point(423, 288)
+        Label9.Location = New Point(423, 323)
         Label9.Name = "Label9"
         Label9.Size = New Size(81, 21)
         Label9.TabIndex = 116
@@ -319,7 +345,7 @@ Partial Class frmSettings
         cbEnableSSL.Font = New Font("Verdana", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
         cbEnableSSL.FormattingEnabled = True
         cbEnableSSL.Items.AddRange(New Object() {"Please Select", "True", "False"})
-        cbEnableSSL.Location = New Point(502, 284)
+        cbEnableSSL.Location = New Point(502, 319)
         cbEnableSSL.Name = "cbEnableSSL"
         cbEnableSSL.Size = New Size(118, 24)
         cbEnableSSL.TabIndex = 111
@@ -328,7 +354,7 @@ Partial Class frmSettings
         ' txtEmailPassword
         ' 
         txtEmailPassword.Font = New Font("Verdana", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
-        txtEmailPassword.Location = New Point(401, 330)
+        txtEmailPassword.Location = New Point(401, 365)
         txtEmailPassword.Name = "txtEmailPassword"
         txtEmailPassword.PlaceholderText = "password"
         txtEmailPassword.Size = New Size(105, 23)
@@ -339,7 +365,7 @@ Partial Class frmSettings
         Label8.AutoSize = True
         Label8.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         Label8.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        Label8.Location = New Point(282, 288)
+        Label8.Location = New Point(282, 323)
         Label8.Name = "Label8"
         Label8.Size = New Size(39, 21)
         Label8.TabIndex = 117
@@ -350,7 +376,7 @@ Partial Class frmSettings
         Label7.AutoSize = True
         Label7.Font = New Font("Segoe UI Variable Display", 12F, FontStyle.Regular, GraphicsUnit.Point)
         Label7.ForeColor = Color.FromArgb(CByte(209), CByte(219), CByte(221))
-        Label7.Location = New Point(33, 288)
+        Label7.Location = New Point(33, 323)
         Label7.Name = "Label7"
         Label7.Size = New Size(50, 21)
         Label7.TabIndex = 118
@@ -359,7 +385,7 @@ Partial Class frmSettings
         ' btnAddEmailPass
         ' 
         btnAddEmailPass.Font = New Font("Verdana", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
-        btnAddEmailPass.Location = New Point(530, 327)
+        btnAddEmailPass.Location = New Point(530, 362)
         btnAddEmailPass.Name = "btnAddEmailPass"
         btnAddEmailPass.Size = New Size(269, 30)
         btnAddEmailPass.TabIndex = 115
@@ -369,7 +395,7 @@ Partial Class frmSettings
         ' txtEmailAddresses
         ' 
         txtEmailAddresses.Font = New Font("Verdana", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
-        txtEmailAddresses.Location = New Point(33, 330)
+        txtEmailAddresses.Location = New Point(33, 365)
         txtEmailAddresses.Name = "txtEmailAddresses"
         txtEmailAddresses.PlaceholderText = "sample@domain.com"
         txtEmailAddresses.Size = New Size(328, 23)
@@ -378,7 +404,7 @@ Partial Class frmSettings
         ' txtSMTPbox
         ' 
         txtSMTPbox.Font = New Font("Verdana", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
-        txtSMTPbox.Location = New Point(82, 284)
+        txtSMTPbox.Location = New Point(82, 319)
         txtSMTPbox.Name = "txtSMTPbox"
         txtSMTPbox.PlaceholderText = "smtp.yourdomain.com"
         txtSMTPbox.Size = New Size(193, 23)
@@ -427,6 +453,24 @@ Partial Class frmSettings
         btnIPQualityScore.TabIndex = 104
         btnIPQualityScore.Text = "Add API for Number and Email Verification"
         btnIPQualityScore.UseVisualStyleBackColor = True
+        ' 
+        ' txtTwilioSecret
+        ' 
+        txtTwilioSecret.Font = New Font("Verdana", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
+        txtTwilioSecret.Location = New Point(246, 266)
+        txtTwilioSecret.Name = "txtTwilioSecret"
+        txtTwilioSecret.Size = New Size(448, 23)
+        txtTwilioSecret.TabIndex = 137
+        ' 
+        ' btnTwilioSecret
+        ' 
+        btnTwilioSecret.Font = New Font("Segoe UI Variable Display", 9.75F, FontStyle.Regular, GraphicsUnit.Point)
+        btnTwilioSecret.Location = New Point(701, 266)
+        btnTwilioSecret.Name = "btnTwilioSecret"
+        btnTwilioSecret.Size = New Size(224, 21)
+        btnTwilioSecret.TabIndex = 138
+        btnTwilioSecret.Text = "Add TWILIO Secret"
+        btnTwilioSecret.UseVisualStyleBackColor = True
         ' 
         ' frmSettings
         ' 
@@ -484,4 +528,8 @@ Partial Class frmSettings
     Friend WithEvents lblSerpAPI As LinkLabel
     Friend WithEvents lblSecurityTrails As LinkLabel
     Friend WithEvents lblZoomeye As LinkLabel
+    Friend WithEvents txtTwilioSID As TextBox
+    Friend WithEvents btnTwilioSID As Button
+    Friend WithEvents txtTwilioSecret As TextBox
+    Friend WithEvents btnTwilioSecret As Button
 End Class

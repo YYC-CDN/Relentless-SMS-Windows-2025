@@ -30,6 +30,7 @@ Module x
     Public ReadOnly SignupUrlsPath As String = Path.Combine(MailmanPath, "signup_urls.txt")
     Public ReadOnly TargetHistoryPath As String = Path.Combine(LogsPath, "TargetHistory.txt")
     Public ReadOnly ApiKeyPath As String = Path.Combine(ApiPath, "IPQualityScoreAPI.txt")
+    Public ReadOnly TwilioApiKeyPath As String = Path.Combine(ApiPath, "TwilioAPI.txt")
     Public ReadOnly TextNowApiPath As String = Path.Combine(ApiPath, "TextNowAPI.txt")
     Public ReadOnly SmtpFilePath As String = Path.Combine(EmailInfoPath, "SMTP.txt")
     Public ReadOnly EmailAddressFilePath As String = Path.Combine(EmailInfoPath, "EmailAddress.txt")
@@ -132,7 +133,7 @@ Module x
         If Not Directory.Exists("C:\RelentlessSMS\OutgoingImages") Then
             Directory.CreateDirectory("C:\RelentlessSMS\OutgoingImages")
         End If
-        ' Check if C:\RelentlessSMS\APIs directory exists, create it if it doesn't
+        ' Check if C:\RelentlessSMS\EmailInformation directory exists, create it if it doesn't
         If Not Directory.Exists("C:\RelentlessSMS\EmailInformation") Then
             Directory.CreateDirectory("C:\RelentlessSMS\EmailInformation")
         End If
@@ -161,6 +162,12 @@ Module x
         ' Check if C:\RelentlessSMS\APIs\IPQualityScoreAPI.text file exists, create it if it doesn't
         If Not File.Exists("C:\RelentlessSMS\APIs\IPQualityScoreAPI.txt") Then
             File.Create("C:\RelentlessSMS\APIs\IPQualityScoreAPI.txt").Dispose()
+        End If
+
+
+        ' Check if C:\RelentlessSMS\APIs\TwilioAPI.text file exists, create it if it doesn't
+        If Not File.Exists("C:\RelentlessSMS\APIs\TwilioAPI.txt") Then
+            File.Create("C:\RelentlessSMS\APIs\TwilioAPI.txt").Dispose()
         End If
 
         'Create API.txt if it does not exist

@@ -24,7 +24,6 @@ Imports HtmlAgilityPack
 Imports System.Threading.Tasks
 
 Public Class frmMain
-    Public Shared allowConfirmLogging As Boolean = True
     Private newColor As Color = Color.Red ' Declare newColor at class level
     Private lastVPNState As Boolean? = Nothing
     Private imageFiles As String()
@@ -42,12 +41,14 @@ Public Class frmMain
     Private originalBackColor As Color
     Private isFirstVpnCheck As Boolean = True
     Private lastVpnStatus As Boolean = True
-
+    Public allowConfirmLogging As Boolean = True
 
     ' =======================================================================================
-    ' 03/24/25 - Form Load - Stable and safe initialization
-    ' Delays VPN check to avoid flashing from early network errors.
+    ' Emergency kill flag for E-STOP and VPN loss — checked by Mailman.vb for instant shutdown
     ' =======================================================================================
+    Public forceStopFlag As Boolean = False
+
+
     ' =======================================================================================
     ' 03/24/25 - FrmMain_Load - Main startup routine
     ' Initializes form UI, API config, language settings, provider list, and delayed VPN check.
@@ -55,8 +56,7 @@ Public Class frmMain
     Private Sub FrmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         ' Set application window title
-        Me.Text = $"Version 032925-55 | SIM ENV: TIER 1 | OPSEC | FOUO | PCII"
-
+        Me.Text = $"Version 040525-01 | FOR OFFICIAL USE ONLY (FOUO) | Protected Critical Infrastructure Information (PCII):"
 
         ' Initialize required files and folders
         x.startup()
@@ -156,18 +156,33 @@ Public Class frmMain
     End Sub
 
     ' =======================================================================================
-    ' FetchProxyDetails - Checks VPN/Proxy using IPQualityScore and updates UI labels.
-    ' Triggers flashing alert only on meaningful VPN drop or detection failure.
+    ' Version: 040125-09
+    ' FetchProxyDetails - Verifies VPN/proxy status using IPQualityScore and updates GUI.
+    ' Also handles UI lockdown, visual flashing alerts, and API failure fallback states.
     ' =======================================================================================
     Private Async Sub FetchProxyDetails()
         Try
+            ' =======================================================================================
+            ' Step 1: Load API Key from File
+            ' =======================================================================================
             If Not File.Exists(x.ApiKeyPath) Then Exit Sub
-
             Dim apiKey As String = File.ReadAllText(x.ApiKeyPath).Trim()
+
+            ' =======================================================================================
+            ' Step 2: Get Public IP from ipify
+            ' =======================================================================================
             Dim ipAddress As String = Await GetIPAddressAsync()
+            If String.IsNullOrEmpty(ipAddress) OrElse ipAddress = "Unknown" Then Exit Sub
+
+            ' =======================================================================================
+            ' Step 3: Build IPQualityScore Request
+            ' =======================================================================================
             Dim apiUrl As String = $"https://www.ipqualityscore.com/api/json/ip/{apiKey}/{ipAddress}"
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
 
+            ' =======================================================================================
+            ' Step 4: Initialize Variables
+            ' =======================================================================================
             Dim vpn As Boolean = False
             Dim proxy As Boolean = False
             Dim likelyVpn As Boolean = False
@@ -176,11 +191,16 @@ Public Class frmMain
             Dim isp As String = ""
             Dim org As String = ""
 
+            ' =======================================================================================
+            ' Step 5: Send API Request
+            ' =======================================================================================
             Using client As New HttpClient()
                 Dim responseJson As String = Await client.GetStringAsync(apiUrl).ConfigureAwait(False)
                 Dim responseObj As JObject = JObject.Parse(responseJson)
 
-                ' Extract VPN-related fields
+                ' =======================================================================================
+                ' Step 6: Extract & Interpret Fields
+                ' =======================================================================================
                 proxy = responseObj("proxy")?.ToString().ToLower() = "true"
                 vpn = responseObj("vpn")?.ToString().ToLower() = "true"
                 Dim tor As Boolean = responseObj("tor")?.ToString().ToLower() = "true"
@@ -191,94 +211,57 @@ Public Class frmMain
                 country = responseObj("country_code")?.ToString()
                 Dim riskScore As Integer = CInt(responseObj("fraud_score")?.ToString())
 
+                ' =======================================================================================
+                ' Step 7: Calculate Likely VPN Based on All Indicators
+                ' =======================================================================================
                 likelyVpn = vpn OrElse proxy OrElse tor OrElse hosting OrElse
                         (Not String.IsNullOrEmpty(org) AndAlso org.ToLower().Contains("proton")) OrElse
                         (riskScore >= 75)
 
-                ' Update labels safely
-                If Me.lblVPN.InvokeRequired Then
-                    Me.Invoke(Sub()
-                                  Me.lblVPN.Text = "VPN: " & vpn.ToString().ToUpper()
-                                  Me.lblProxy.Text = "Proxy: " & proxy.ToString().ToUpper()
-                                  Me.lblRegion.Text = "Region: " & region
-                                  Me.lblCountryCode.Text = "Country Code: " & country
-                                  Me.lblYourIP.Text = "Your IP: " & ipAddress
-                                  Me.lblISP.Text = "ISP: " & isp
+                ' =======================================================================================
+                ' Step 8: Update GUI (with Invoke if needed)
+                ' =======================================================================================
+                Dim updateUI = Sub()
+                                   lblVPN.Text = "VPN: " & vpn.ToString().ToUpper()
+                                   lblProxy.Text = "Proxy: " & proxy.ToString().ToUpper()
+                                   lblRegion.Text = "Region: " & region
+                                   lblCountryCode.Text = "Country Code: " & country
+                                   lblYourIP.Text = "Your IP: " & ipAddress
+                                   lblISP.Text = "ISP: " & isp
+                                   lblVPNTrust.Text = "Likely VPN: " & likelyVpn.ToString().ToUpper()
 
-                                  ' =======================================================================================
-                                  ' Lock buttons if VPN is disconnected, ISP is XMission (home), or in a waiting state
-                                  ' =======================================================================================
-                                  If lblISP.Text.ToLower().Contains("xmission") OrElse lblVPN.Text = "VPN: FALSE" OrElse lblVPNTrust.Text = "Likely VPN: FALSE" Then
-                                      btnMailman.Enabled = False
-                                      btnStopAll.Enabled = False
-                                      btnEmailValidation.Enabled = False
-                                      btnMailbaitSubmit.Enabled = False
-                                      btnVerifyNumber.Enabled = False
-                                      btnSendSMS.Enabled = False
-                                      btnSettings.Enabled = False
-                                      dbSelectCellProvider.Enabled = False
-                                      btnEmailToSMS.Enabled = False
-                                      btnChangeName.Enabled = False
-                                      cbImagesCheckbox.Enabled = False
-                                  Else
-                                      ' Enable buttons when VPN is connected and ISP is not XMission
-                                      btnMailman.Enabled = True
-                                      btnStopAll.Enabled = True
-                                      btnEmailValidation.Enabled = True
-                                      btnMailbaitSubmit.Enabled = True
-                                      btnVerifyNumber.Enabled = True
-                                      btnSendSMS.Enabled = True
-                                      btnSettings.Enabled = True
-                                      dbSelectCellProvider.Enabled = True
-                                      btnEmailToSMS.Enabled = True
-                                      btnChangeName.Enabled = True
-                                      cbImagesCheckbox.Enabled = True
-                                  End If
+                                   ' =======================================================================================
+                                   ' LOCKDOWN: Disable buttons if VPN is off or home ISP (XMission) is detected
+                                   ' =======================================================================================
+                                   Dim isHomeISP = lblISP.Text.ToLower().Contains("xmission L.C")
+                                   Dim vpnInactive = lblVPN.Text = "VPN: Inactive" OrElse lblVPNTrust.Text = "Likely VPN: NO"
 
-                                  ' =====================================================================================
-                                  ' If ISP is XMission (home network), lock all buttons (prevent sending messages)
-                                  ' =====================================================================================
-                                  If lblISP.Text.ToLower().Contains("xmission") Then
-                                      btnMailman.Enabled = False
-                                      btnStopAll.Enabled = False
-                                      btnEmailValidation.Enabled = False
-                                      btnMailbaitSubmit.Enabled = False
-                                      btnVerifyNumber.Enabled = False
-                                      btnSendSMS.Enabled = False
-                                      btnSettings.Enabled = False
-                                      dbSelectCellProvider.Enabled = False
-                                      btnEmailToSMS.Enabled = False
-                                      btnChangeName.Enabled = False
-                                      cbImagesCheckbox.Enabled = False
-                                  End If
+                                   ' These buttons must remain usable regardless of VPN
+                                   btnSettings.Enabled = True
+                                   btnVerifyNumber.Enabled = True
+                                   btnEmailValidation.Enabled = True
 
-                                  ' =======================================================================================
-                                  ' XMission OVERRIDE: This ISP is NEVER a VPN. Enforce lockdown if detected.
-                                  ' =======================================================================================
-                                  If Me.lblISP.Text.ToLower().Contains("xmission") Then
+                                   ' Main lock condition
+                                   Dim lockControls = isHomeISP OrElse vpnInactive
 
-                                      ' =======================================================================================
-                                      ' Flash once when VPN reconnects and returns to home ISP location (XMission)
-                                      ' =======================================================================================
-                                      If Me.lblISP.Text.ToLower().Contains("xmission") Then
-                                          'FlashOnceOnVPNReconnect()
-                                      End If
-                                      Me.lblVPN.Text = "VPN: FALSE"
-                                      Me.lblVPNTrust.Text = "Likely VPN: FALSE"
-                                  End If
-                                  Me.lblVPNTrust.Text = "Likely VPN: " & likelyVpn.ToString().ToUpper()
-                              End Sub)
+                                   btnMailman.Enabled = Not lockControls
+                                   btnStopAll.Enabled = Not lockControls
+                                   btnMailbaitSubmit.Enabled = Not lockControls
+                                   btnSendSMS.Enabled = Not lockControls
+                                   btnEmailToSMS.Enabled = Not lockControls
+                                   'btnChangeName.Enabled = Not lockControls
+                                   dbSelectCellProvider.Enabled = Not lockControls
+                               End Sub
+
+                If Me.InvokeRequired Then
+                    Me.Invoke(updateUI)
                 Else
-                    Me.lblVPN.Text = "VPN: " & vpn.ToString().ToUpper()
-                    Me.lblProxy.Text = "Proxy: " & proxy.ToString().ToUpper()
-                    Me.lblRegion.Text = "Region: " & region
-                    Me.lblCountryCode.Text = "Country Code: " & country
-                    Me.lblYourIP.Text = "Your IP: " & ipAddress
-                    Me.lblISP.Text = "ISP: " & isp
-                    Me.lblVPNTrust.Text = "Likely VPN: " & likelyVpn.ToString().ToUpper()
+                    updateUI.Invoke()
                 End If
 
-                ' === Trigger flash ONLY if it's not the first check and VPN is now down ===
+                ' =======================================================================================
+                ' Step 9: Trigger Visual Flashing if VPN Just Disconnected
+                ' =======================================================================================
                 If Not vpn AndAlso (Not isFirstVpnCheck OrElse lastVpnStatus = True) Then
                     TriggerVPNAlert()
                 End If
@@ -289,45 +272,45 @@ Public Class frmMain
             End Using
 
         Catch ex As Exception
-            ' === Connection failed or VPN status could not be fetched ===
-            If Me.txtOutgoingMessages.InvokeRequired Then
-                Me.Invoke(Sub()
-                              Me.txtOutgoingMessages.Clear()
-                              Me.txtOutgoingMessages.AppendText("⚠ VPN detection failed." & Environment.NewLine)
+            ' =======================================================================================
+            ' API Failure or Network Error – Lock Down UI and Display Fallback
+            ' =======================================================================================
+            Dim fallbackUI = Sub()
+                                 lblVPN.Text = "VPN: Unavailable"
+                                 lblProxy.Text = "Proxy: Unavailable"
+                                 lblRegion.Text = "Region: Unavailable"
+                                 lblCountryCode.Text = "Country Code: Unavailable"
+                                 lblYourIP.Text = "Your IP: Unavailable"
+                                 lblISP.Text = "ISP: Unavailable"
+                                 lblVPNTrust.Text = "Likely VPN: Unavailable"
 
-                              Me.lblVPN.Text = "VPN: Unavailable"
-                              Me.lblProxy.Text = "Proxy: Unavailable"
-                              Me.lblRegion.Text = "Region: Unavailable"
-                              Me.lblCountryCode.Text = "Country Code: Unavailable"
-                              Me.lblYourIP.Text = "Your IP: Unavailable"
-                              Me.lblISP.Text = "ISP: Unavailable"
-                              Me.lblVPNTrust.Text = "Likely VPN: Unavailable"
+                                 txtOutgoingMessages.AppendText("⚠ VPN detection failed." & Environment.NewLine)
+                                 txtConfirm.AppendText("⚠ VPN detection failed." & Environment.NewLine)
 
-                              ' Trigger flash if not first check
-                              If Not isFirstVpnCheck Then TriggerVPNAlert()
+                                 TriggerVPNAlert()
 
-                              lastVpnStatus = False
-                              isFirstVpnCheck = False
-                          End Sub)
+                                 ' Lock all except diagnostics
+                                 btnMailman.Enabled = False
+                                 btnStopAll.Enabled = False
+                                 btnMailbaitSubmit.Enabled = False
+                                 btnSendSMS.Enabled = False
+                                 btnEmailToSMS.Enabled = False
+                                 'btnChangeName.Enabled = False
+                                 dbSelectCellProvider.Enabled = False
+                             End Sub
+
+            If Me.InvokeRequired Then
+                Me.Invoke(fallbackUI)
             Else
-                Me.txtOutgoingMessages.Clear()
-                Me.txtOutgoingMessages.AppendText("⚠ VPN detection failed." & Environment.NewLine)
-
-                Me.lblVPN.Text = "VPN: Unavailable"
-                Me.lblProxy.Text = "Proxy: Unavailable"
-                Me.lblRegion.Text = "Region: Unavailable"
-                Me.lblCountryCode.Text = "Country Code: Unavailable"
-                Me.lblYourIP.Text = "Your IP: Unavailable"
-                Me.lblISP.Text = "ISP: Unavailable"
-                Me.lblVPNTrust.Text = "Likely VPN: Unavailable"
-
-                If Not isFirstVpnCheck Then TriggerVPNAlert()
-
-                lastVpnStatus = False
-                isFirstVpnCheck = False
+                fallbackUI.Invoke()
             End If
+
+            lastVpnStatus = False
+            isFirstVpnCheck = False
         End Try
     End Sub
+
+
 
 
     ' =======================================================================================
@@ -362,7 +345,9 @@ Public Class frmMain
         txtOpenTabs.BackColor = Color.FromArgb(30, 30, 30)
         txtSuccessful.BackColor = Color.FromArgb(30, 30, 30)
         txtFailed.BackColor = Color.FromArgb(30, 30, 30)
+        txtConfirmed.BackColor = Color.FromArgb(30, 30, 30)
         txtOutgoingMessages.BackColor = Color.FromArgb(30, 30, 30)
+        txtConfirm.BackColor = Color.FromArgb(30, 30, 30)
         dbOutgoingLanguage.BackColor = Color.FromArgb(30, 30, 30)
         dbSelectCellProvider.BackColor = Color.FromArgb(30, 30, 30)
     End Sub
@@ -397,7 +382,9 @@ Public Class frmMain
             txtOpenTabs.BackColor = Color.Red
             txtSuccessful.BackColor = Color.Red
             txtFailed.BackColor = Color.Red
+            txtConfirmed.BackColor = Color.Red
             txtOutgoingMessages.BackColor = Color.Red
+            txtConfirm.BackColor = Color.Red
             txtVerificationResults.BackColor = Color.Red
             Me.BackColor = newColor
             txtTargetNumber.BackColor = newColor
@@ -407,7 +394,9 @@ Public Class frmMain
             txtOpenTabs.BackColor = newColor
             txtSuccessful.BackColor = newColor
             txtFailed.BackColor = newColor
+            txtConfirmed.BackColor = newColor
             txtOutgoingMessages.BackColor = newColor
+            txtConfirm.BackColor = newColor
             dbOutgoingLanguage.BackColor = newColor
             dbSelectCellProvider.BackColor = newColor
             flashCount += 1
@@ -502,6 +491,14 @@ Public Class frmMain
     Private Function LoadProxyDetectionAPI() As String
         Try
             Return File.ReadAllText("C:\RelentlessSMS\APIs\IPQualityScoreAPI.txt").Trim()
+        Catch ex As Exception
+            Return String.Empty
+        End Try
+    End Function
+
+    Private Function LoadTwilioAPI() As String
+        Try
+            Return File.ReadAllText("C:\RelentlessSMS\APIs\TwilioAPI.txt").Trim()
         Catch ex As Exception
             Return String.Empty
         End Try
@@ -885,6 +882,7 @@ Public Class frmMain
             pbAllFunctions.Style = ProgressBarStyle.Marquee
             pbAllFunctions.MarqueeAnimationSpeed = 50
             txtOutgoingMessages.Text = "🔄 Submitting target information to multiple spam outlets. Do not close."
+            txtConfirm.Text = "🔄 Submitting target information to multiple spam outlets. Do not close."
 
             ' Initialize browser form
             Dim frmBrowser As New frmBrowser()
@@ -1056,6 +1054,9 @@ Public Class frmMain
             txtOutgoingMessages.Clear()
             txtOutgoingMessages.AppendText("⛔ All operations stopped by user." & Environment.NewLine)
 
+            txtConfirm.Clear()
+            txtConfirm.AppendText("⛔ All operations stopped by user." & Environment.NewLine)
+
             btnMailman.Enabled = True
             'txtSuccessful.Text = "0"
             'txtFailed.Text = "0"
@@ -1143,9 +1144,18 @@ Public Class frmMain
         txtOutgoingMessages.Clear()
         txtSuccessful.Text = "0"
         txtFailed.Text = "0"
+        txtConfirmed.Text = "0"
         pbAllFunctions.Style = ProgressBarStyle.Marquee
         pbAllFunctions.MarqueeAnimationSpeed = 50
         txtOutgoingMessages.AppendText("🔄 Starting email submissions... " & Environment.NewLine)
+
+        txtConfirm.Clear()
+        txtSuccessful.Text = "0"
+        txtFailed.Text = "0"
+        txtConfirmed.Text = "0"
+        pbAllFunctions.Style = ProgressBarStyle.Marquee
+        pbAllFunctions.MarqueeAnimationSpeed = 50
+        txtConfirm.AppendText("🔄 Starting email submissions... " & Environment.NewLine)
 
         ' Log the start of the process
         LogStatus("🔄 Starting email submissions... ")
@@ -1168,14 +1178,17 @@ Public Class frmMain
 
             ' Display and log completion message
             txtOutgoingMessages.AppendText("✅ Submission process completed." & Environment.NewLine)
+            txtConfirm.AppendText("✅ Submission process completed." & Environment.NewLine)
             LogStatus("✅ Submission process completed.")
         Catch ex As OperationCanceledException
             ' Handle process cancellation
             txtOutgoingMessages.AppendText("⚠ Process was canceled by the user." & Environment.NewLine)
+            txtConfirm.AppendText("⚠ Process was canceled by the user." & Environment.NewLine)
             LogStatus("⚠ Process was canceled by the user.")
         Catch ex As Exception
             ' Handle any other unexpected errors
             txtOutgoingMessages.AppendText($"❌ Error during submission: {ex.Message}" & Environment.NewLine)
+            txtConfirm.AppendText($"❌ Error during submission: {ex.Message}" & Environment.NewLine)
             LogStatus($"❌ Error during submission: {ex.Message}")
         Finally
             ' =======================================================================================
@@ -1194,16 +1207,16 @@ Public Class frmMain
     ' =======================================================================================
     Private Sub UpdateUIStatus(message As String, Optional isSuccess As Boolean? = Nothing)
         If InvokeRequired Then
-            ' Ensure the update is executed on the UI thread
             Invoke(New Action(Of String, Boolean?)(AddressOf UpdateUIStatus), message, isSuccess)
         Else
-            ' Append status message to the UI
+            ' Always log to OutgoingMessages
             txtOutgoingMessages.AppendText($"{DateTime.Now}: {message}{Environment.NewLine}")
+            txtOutgoingMessages.SelectionStart = txtOutgoingMessages.TextLength
+            txtOutgoingMessages.ScrollToCaret()
 
-            ' Log the message
             LogStatus(message)
 
-            ' Update success or failure counters
+            ' Count success/fail independently of confirm status
             If isSuccess.HasValue Then
                 If isSuccess.Value Then
                     txtSuccessful.Text = (Integer.Parse(txtSuccessful.Text) + 1).ToString()
@@ -1211,8 +1224,41 @@ Public Class frmMain
                     txtFailed.Text = (Integer.Parse(txtFailed.Text) + 1).ToString()
                 End If
             End If
+
+            ' Only push confirmed results into txtConfirm
+            If message.Contains("✅ Confirmed:") Then
+                txtConfirm.AppendText($"{DateTime.Now}: {message}{Environment.NewLine}")
+                txtConfirm.SelectionStart = txtConfirm.TextLength
+                txtConfirm.ScrollToCaret()
+            End If
         End If
     End Sub
+
+    'Private Sub UpdateUIStatus(message As String, Optional isSuccess As Boolean? = Nothing)
+    '    If InvokeRequired Then
+    '        Invoke(New Action(Of String, Boolean?)(AddressOf UpdateUIStatus), message, isSuccess)
+    '    Else
+    '        ' Always log to OutgoingMessages
+    '        txtOutgoingMessages.AppendText($"{DateTime.Now}: {message}{Environment.NewLine}")
+    '        LogStatus(message)
+
+    '        ' Count success/fail independently of confirm status
+    '        If isSuccess.HasValue Then
+    '            If isSuccess.Value Then
+    '                txtSuccessful.Text = (Integer.Parse(txtSuccessful.Text) + 1).ToString()
+    '            Else
+    '                txtFailed.Text = (Integer.Parse(txtFailed.Text) + 1).ToString()
+    '            End If
+    '        End If
+
+    '        ' Only push confirmed results into txtConfirm
+    '        If message.Contains("✅ Confirmed:") Then
+    '            txtConfirm.AppendText($"{DateTime.Now}: {message}{Environment.NewLine}")
+    '        End If
+    '    End If
+    'End Sub
+
+
 
     ' =======================================================================================
     ' Submit the Email to the Extracted Form
@@ -1296,6 +1342,19 @@ Public Class frmMain
 
 
     ' =======================================================================================
+    ' 033125-06 - Clears key output and counter fields on the main form
+    ' Used by btnClear to reset status without affecting stored settings or timers.
+    ' =======================================================================================
+    Private Sub btnClear_Click(sender As Object, e As EventArgs) Handles btnClear.Click
+        txtConfirm.Clear()
+        txtOutgoingMessages.Clear()
+        txtSuccessful.Text = "0"
+        txtFailed.Text = "0"
+        txtConfirmed.Text = "0"
+    End Sub
+
+
+    ' =======================================================================================
     ' Flashes the form once when VPN returns and detects XMission
     ' =======================================================================================
     '    Dim originalColor As Color = Me.BackColor
@@ -1317,3 +1376,5 @@ Public Class frmMain
     '    Application.DoEvents()
     'End Sub
 End Class
+
+' =======================================------

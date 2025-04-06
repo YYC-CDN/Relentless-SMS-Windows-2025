@@ -9,6 +9,7 @@ Public Class frmSettings
         Me.BringToFront() ' Brings settings form in front of main window
 
         LoadIPQualityScoreAPI()
+        LoadTwilioAPI()
         LoadTextNowAPI()
 
         ' Load Mailman-related API keys from saved file
@@ -67,12 +68,38 @@ Public Class frmSettings
     End Sub
 
     ' =======================================================================================
+    ' Save TwilioAPI key (overwrite with latest input)
+    ' =======================================================================================
+    Private Sub btnTwilioSID_Click(sender As Object, e As EventArgs) Handles btnTwilioSID.Click
+        Dim new_api As String = txtTwilioSID.Text.Trim()
+        Dim path As String = "C:\RelentlessSMS\APIs\TwilioAPI.txt"
+
+        If String.IsNullOrEmpty(new_api) Then
+            MessageBox.Show("Please enter the Twilio API key.")
+            Return
+        End If
+
+        File.WriteAllText(path, new_api)
+        MessageBox.Show("✅ Twilio API key saved.", "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End Sub
+
+    ' =======================================================================================
     ' Load the IPQualityScore API key from file and display it
     ' =======================================================================================
     Private Sub LoadIPQualityScoreAPI()
         Dim path As String = "C:\RelentlessSMS\APIs\IPQualityScoreAPI.txt"
         If File.Exists(path) Then
             txtIPQualityScore.Text = File.ReadAllText(path).Trim()
+        End If
+    End Sub
+
+    ' =======================================================================================
+    ' Load the Twilio API key from file and display it
+    ' =======================================================================================
+    Private Sub LoadTwilioAPI()
+        Dim path As String = "C:\RelentlessSMS\APIs\TwilioAPI.txt"
+        If File.Exists(path) Then
+            txtTwilioSID.Text = File.ReadAllText(path).Trim()
         End If
     End Sub
 
@@ -110,25 +137,64 @@ Public Class frmSettings
     End Sub
 
     ' =======================================================================================
-    ' Launch the scraper and show live output in frmScraperConsole
+    ' 03/30/2025 - Combined Mailman2 + Mailman3 Scraper | Version 033025-04
+    ' Runs MM2 discovery via API + runs MM3 discovery against static list.
+    ' All valid URLs are written to signup_urls.txt for unified processing.
     ' =======================================================================================
     Private Async Sub btnRunScraper_Click(sender As Object, e As EventArgs) Handles btnRunScraper.Click
         Try
+            ' Launch console log window
             Dim console As New frmScraperConsole()
             console.Show()
 
+            ' =======================================================================================
+            ' Run Mailman 2 Discovery (Shodan, ZoomEye, etc.)
+            ' =======================================================================================
             Await x.DiscoverMailmanProvidersAsync(
-                tbShodanAPI.Text.Trim(),
-                tbZoomEyeAPI.Text.Trim(),
-                tbSecurityTrailsAPI.Text.Trim(),
-                tbSerpAPI.Text.Trim(),
-                "C:\RelentlessSMS\Mailman\signup_urls.txt",
-                console
-            )
+            tbShodanAPI.Text.Trim(),
+            tbZoomEyeAPI.Text.Trim(),
+            tbSecurityTrailsAPI.Text.Trim(),
+            tbSerpAPI.Text.Trim(),
+            "C:\RelentlessSMS\Mailman\signup_urls.txt",
+            console
+        )
+
+            ' =======================================================================================
+            ' Run Mailman 3 Discovery (Static list for now)
+            ' =======================================================================================
+            Dim candidateUrls As New List(Of String) From {
+            "https://lists.uchicago.edu",
+            "https://mailman3.sys.kth.se",
+            "https://mailman3.caltech.edu",
+            "https://lists.example.org",
+            "https://mm3.testdomain.net"
+        }
+
+            Dim mm3Discovered As New List(Of String)
+            Dim mm3 As New Mailman3()
+
+            Await mm3.Mailman3_DiscoveryAsync(candidateUrls, Sub(msg)
+                                                                 If msg.StartsWith("✅ Valid") AndAlso msg.Contains("http") Then
+                                                                     Dim urlPart = msg.Substring(msg.IndexOf("http")).Trim()
+                                                                     mm3Discovered.Add(urlPart)
+                                                                 End If
+
+                                                                 console.Invoke(Sub()
+                                                                                    console.AppendLog(msg)
+                                                                                End Sub)
+                                                             End Sub)
+
+            ' Show MM3 final count in console
+            console.AppendLog($"✅ MM3 Discovery complete. Total valid URLs: {mm3Discovered.Count}")
+
+            MessageBox.Show("✅ Combined MM2 + MM3 discovery complete.", "Discovery Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
         Catch ex As Exception
             MessageBox.Show("❌ Error running scraper: " & ex.Message)
         End Try
     End Sub
+
+
 
     ' =======================================================================================
     ' Save SMTP server info to file for outbound emails

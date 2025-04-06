@@ -1,7 +1,7 @@
 # Relentless SMS Windows
 # Relentless-SMS-for-Windows
 
-While I don't ever post, I do come here frequently. I built a Windows program that is a "cellular phone stress tester". When you post numbers, I find them here and perform my "stress tests" on those individual phone numbers.
+I built a Windows program that is a "cellular phone stress tester". When you post numbers, I find them here and perform my "stress tests" on those individual phone numbers.
 
 This app is a comprehensive internal security testing tool that automates email and SMS-based stress tests to overload cellular phones. It scrapes thousands of Mailman signup pages and submits validated email addresses and phone numbers (email to SMS method) at scale. Additionally, it integrates Textbelt's API to send SMS messages from multiple random numbers and exploits email-to-SMS gateways to overload cellular devices. The app reminds users to enable VPN protection for anonymity.
 

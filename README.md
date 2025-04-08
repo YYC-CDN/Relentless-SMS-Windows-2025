@@ -1,14 +1,12 @@
 # Relentless SMS Windows
-# Relentless-SMS-for-Windows
 
-I built a Windows program that is a "cellular phone stress tester" for "stress tests" on those individual phone numbers.
+THis is a Windows .NET program that is a "cellular phone stress tester" for "stress tests" on individual phone numbers, programmed in Visual Basic using Visual Studio 2022.
 
 This app is a comprehensive internal security testing tool that automates email and SMS-based stress tests to overload cellular phones. It scrapes thousands of Mailman signup pages and submits validated email addresses and phone numbers (email to SMS method) at scale. Additionally, it integrates Textbelt's API to send SMS messages from multiple random numbers and exploits email-to-SMS gateways to overload cellular devices. The app reminds users to enable VPN protection for anonymity.
 
 The tool supports six primary attack methods:
 
 Mass Submission – Submits test emails to thousands of Mailman lists simultaneously.
-Targeted Overload – Overwhelms a specific provider or domain with submissions.
 Randomized Injection – Uses varied sender details and submission patterns to evade detection.
 Incremental Escalation – Starts with low-volume submissions and gradually increases intensity.
 Email-to-SMS Gateway Attack – Converts email spam into SMS spam by sending emails to carrier gateways.

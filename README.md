@@ -1,7 +1,7 @@
 # Relentless SMS Windows
 # Relentless-SMS-for-Windows
 
-I built a Windows program that is a "cellular phone stress tester". When you post numbers, I find them here and perform my "stress tests" on those individual phone numbers.
+I built a Windows program that is a "cellular phone stress tester" for "stress tests" on those individual phone numbers.
 
 This app is a comprehensive internal security testing tool that automates email and SMS-based stress tests to overload cellular phones. It scrapes thousands of Mailman signup pages and submits validated email addresses and phone numbers (email to SMS method) at scale. Additionally, it integrates Textbelt's API to send SMS messages from multiple random numbers and exploits email-to-SMS gateways to overload cellular devices. The app reminds users to enable VPN protection for anonymity.
 
@@ -19,7 +19,7 @@ Shodan, SerpAPI (Google Dorking), SecurityTrails, and ZoomEye – Find and valid
 
 Textbelt API – Sends SMS messages from multiple phone numbers. Costs money, but sometimes you need to just send a message. Or many.
 
-Email & Phone Validator API – Ensures valid submission data.
+Email & Phone Validator API – Ensures valid submission data, through IPQualityScore
 
 The system logs all failures, retries submissions after cooldowns, and extracts deeper signup links beyond Mailman index pages. The app is ideal for stress-testing email and SMS spam defenses with high-volume, real-world attack simulations.
 
@@ -46,5 +46,5 @@ By integrating psychological deterrents, high-volume email/SMS spamming techniqu
 
 ## 🛡️ Operational Security (OPSEC) Statement
 
-This system is designed for hardened environments only. All testing and simulations must comply with PCII, FOUO, and internal classified environment handling protocols. VPN enforcement and strict time-gated submission logic ensure OPSEC resilience under load simulation scenarios.
+All testing and simulations must comply internal classified environment handling protocols. VPN enforcement and strict time-gated submission logic ensure OPSEC resilience under load simulation scenarios.
 

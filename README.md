@@ -1,16 +1,23 @@
 # Relentless SMS Windows
 
-THis is a Windows .NET program that is a "cellular phone stress tester" for "stress tests" on individual phone numbers, programmed in Visual Basic using Visual Studio 2022.
+This is a Windows .NET program that is a "cellular phone stress tester" for "stress tests" on individual phone numbers, programmed in Visual Basic using Visual Studio 2022.
 
 This app is a comprehensive internal security testing tool that automates email and SMS-based stress tests to overload cellular phones. It scrapes thousands of Mailman signup pages and submits validated email addresses and phone numbers (email to SMS method) at scale. Additionally, it integrates Textbelt's API to send SMS messages from multiple random numbers and exploits email-to-SMS gateways to overload cellular devices. The app reminds users to enable VPN protection for anonymity.
 
-The tool supports six primary attack methods:
+
+The tool supports five primary attack methods:
 
 Mass Submission – Submits test emails to thousands of Mailman lists simultaneously.
+
 Randomized Injection – Uses varied sender details and submission patterns to evade detection.
+
 Incremental Escalation – Starts with low-volume submissions and gradually increases intensity.
+
 Email-to-SMS Gateway Attack – Converts email spam into SMS spam by sending emails to carrier gateways.
+
 Mailbait.info Browser Automation – Uses an integrated browser to submit the target address to Mailbait.info with unlimited open tabs.
+
+
 
 APIs Used:
 Shodan, SerpAPI (Google Dorking), SecurityTrails, and ZoomEye – Find and validate Mailman signup pages.
@@ -20,6 +27,7 @@ Textbelt API – Sends SMS messages from multiple phone numbers. Costs money, bu
 Email & Phone Validator API – Ensures valid submission data, through IPQualityScore
 
 The system logs all failures, retries submissions after cooldowns, and extracts deeper signup links beyond Mailman index pages. The app is ideal for stress-testing email and SMS spam defenses with high-volume, real-world attack simulations.
+
 
 Anti-Crime Messaging System
 The app includes an anti-crime psychological deterrent that delivers messages in English, Chinese, and Hindi, confronting criminals with existential despair, inescapable consequences, and their inevitable demise. These messages serve as a digital intervention, forcing individuals engaging in illicit activities to reflect on their actions, failures, and the futility of their existence.
@@ -44,5 +52,5 @@ By integrating psychological deterrents, high-volume email/SMS spamming techniqu
 
 ## 🛡️ Operational Security (OPSEC) Statement
 
-All testing and simulations must comply internal classified environment handling protocols. VPN enforcement and strict time-gated submission logic ensure OPSEC resilience under load simulation scenarios.
+All testing and simulations must comply internal classified environment handling protocols. VPN enforcement and strict time-gated submission logic ensure OPSEC resilience under load simulation scenarios. You are responsible for your own security.
 
